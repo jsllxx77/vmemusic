@@ -18,6 +18,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private bool _isUpdatingPlayerPosition;
     private int _currentQueueIndex = -1;
     private string? _activeServerId;
+    private string? _editingServerId;
 
     [ObservableProperty]
     private string serverUrl = "";
@@ -30,6 +31,12 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
     [ObservableProperty]
     private string serverProfileName = "";
+
+    [ObservableProperty]
+    private string activeServerName = "No server selected";
+
+    [ObservableProperty]
+    private string activeServerUrl = "";
 
     [ObservableProperty]
     private string coverArtCacheDirectory = "";
@@ -136,6 +143,14 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
     public bool IsSettingsView => CurrentView == LibraryViewKind.Settings;
 
+    public bool HasSelectedSavedServer => SelectedSavedServer is not null;
+
+    public bool IsEditingSavedServer => !string.IsNullOrWhiteSpace(_editingServerId);
+
+    public string ConnectionFormTitle => IsEditingSavedServer ? "Edit Server" : "New Server";
+
+    public string SaveServerButtonText => IsEditingSavedServer ? "Update Server" : "Save Server";
+
     [RelayCommand]
     private async Task TestConnectionAsync()
     {
@@ -178,8 +193,14 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         SelectedPlaylist = null;
         SelectedSavedServer = null;
         SavedServers.Clear();
+        ActiveServerName = "No server selected";
+        ActiveServerUrl = "";
         ServerProfileName = "";
         _activeServerId = null;
+        _editingServerId = null;
+        OnPropertyChanged(nameof(IsEditingSavedServer));
+        OnPropertyChanged(nameof(ConnectionFormTitle));
+        OnPropertyChanged(nameof(SaveServerButtonText));
         CurrentView = LibraryViewKind.Songs;
         ContentTitle = "Songs";
         StatusMessage = "Saved connection cleared.";
@@ -209,6 +230,54 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     }
 
     [RelayCommand]
+    private void NewServer()
+    {
+        _editingServerId = null;
+        ServerProfileName = "";
+        ServerUrl = "";
+        Username = "";
+        Password = "";
+        OnPropertyChanged(nameof(IsEditingSavedServer));
+        OnPropertyChanged(nameof(ConnectionFormTitle));
+        OnPropertyChanged(nameof(SaveServerButtonText));
+        StatusMessage = "Creating a new server profile.";
+    }
+
+    [RelayCommand]
+    private async Task EditSelectedServerAsync()
+    {
+        if (SelectedSavedServer is null)
+        {
+            StatusMessage = "Select a saved server first.";
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            await LoadFormFromProfileAsync(SelectedSavedServer);
+            StatusMessage = $"Editing {SelectedSavedServer.DisplayName}.";
+        });
+    }
+
+    [RelayCommand]
+    private async Task CancelServerEditAsync()
+    {
+        var profile = SavedServers.FirstOrDefault(server => server.Id == _activeServerId);
+        if (profile is not null)
+        {
+            await RunBusyAsync(async () =>
+            {
+                await LoadFormFromProfileAsync(profile);
+                StatusMessage = "Reverted form to the active server.";
+            });
+            return;
+        }
+
+        NewServer();
+        StatusMessage = "Cleared the connection form.";
+    }
+
+    [RelayCommand]
     private async Task UseSelectedServerAsync()
     {
         if (SelectedSavedServer is null)
@@ -221,10 +290,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         {
             await _settingsService.SetActiveServerAsync(SelectedSavedServer.Id);
             _activeServerId = SelectedSavedServer.Id;
-            ServerProfileName = SelectedSavedServer.DisplayName;
-            ServerUrl = SelectedSavedServer.ServerUrl;
-            Username = SelectedSavedServer.Username;
-            Password = await LoadServerPasswordAsync(SelectedSavedServer);
+            await LoadFormFromProfileAsync(SelectedSavedServer);
+            SetActiveServerSummary(SelectedSavedServer.DisplayName, SelectedSavedServer.ServerUrl);
             _navidromeClient.Configure(CreateConnection());
             StatusMessage = $"Active server set to {SelectedSavedServer.DisplayName}.";
         });
@@ -250,6 +317,11 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
                 if (connection is not null)
                 {
                     ApplyConnection(connection, SavedServers.FirstOrDefault());
+                }
+                else
+                {
+                    ActiveServerName = "No server selected";
+                    ActiveServerUrl = "";
                 }
             }
 
@@ -612,14 +684,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
     partial void OnSelectedSavedServerChanged(SavedServerProfile? value)
     {
-        if (value is null)
-        {
-            return;
-        }
-
-        ServerProfileName = value.DisplayName;
-        ServerUrl = value.ServerUrl;
-        Username = value.Username;
+        OnPropertyChanged(nameof(HasSelectedSavedServer));
     }
 
     private void ReplaceSongs(IReadOnlyList<Song> songs)
@@ -764,6 +829,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             var connection = await _settingsService.LoadConnectionAsync();
             if (connection is null)
             {
+                NewServer();
                 return;
             }
 
@@ -802,11 +868,18 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
     private async Task SaveCurrentServerCoreAsync(bool setActive)
     {
-        await _settingsService.SaveServerAsync(_activeServerId, ServerProfileName, CreateConnection(), setActive);
+        await _settingsService.SaveServerAsync(_editingServerId, ServerProfileName, CreateConnection(), setActive);
         var settings = await _settingsService.LoadSettingsAsync();
         _activeServerId = settings.ActiveServerId;
         await LoadSavedServerProfilesAsync(settings);
         SelectedSavedServer = SavedServers.FirstOrDefault(server => server.Id == _activeServerId);
+        SetActiveServerSummary(
+            SelectedSavedServer?.DisplayName ?? ServerProfileName,
+            SelectedSavedServer?.ServerUrl ?? ServerUrl);
+        _editingServerId = _activeServerId;
+        OnPropertyChanged(nameof(IsEditingSavedServer));
+        OnPropertyChanged(nameof(ConnectionFormTitle));
+        OnPropertyChanged(nameof(SaveServerButtonText));
     }
 
     private async Task LoadSavedServerProfilesAsync(AppSettings? settings = null)
@@ -830,6 +903,11 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         Password = connection.Password;
         ServerProfileName = profile?.DisplayName ?? $"{connection.Username}@{connection.BaseUrl}";
         _activeServerId = profile?.Id;
+        _editingServerId = profile?.Id;
+        SetActiveServerSummary(ServerProfileName, connection.BaseUrl);
+        OnPropertyChanged(nameof(IsEditingSavedServer));
+        OnPropertyChanged(nameof(ConnectionFormTitle));
+        OnPropertyChanged(nameof(SaveServerButtonText));
         _navidromeClient.Configure(connection);
     }
 
@@ -844,5 +922,23 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
         var protectedPassword = settings.Servers.FirstOrDefault(server => server.Id == profile.Id)?.ProtectedPassword ?? "";
         return new PasswordProtector().Unprotect(protectedPassword);
+    }
+
+    private async Task LoadFormFromProfileAsync(SavedServerProfile profile)
+    {
+        ServerProfileName = profile.DisplayName;
+        ServerUrl = profile.ServerUrl;
+        Username = profile.Username;
+        Password = await LoadServerPasswordAsync(profile);
+        _editingServerId = profile.Id;
+        OnPropertyChanged(nameof(IsEditingSavedServer));
+        OnPropertyChanged(nameof(ConnectionFormTitle));
+        OnPropertyChanged(nameof(SaveServerButtonText));
+    }
+
+    private void SetActiveServerSummary(string name, string url)
+    {
+        ActiveServerName = string.IsNullOrWhiteSpace(name) ? "No server selected" : name;
+        ActiveServerUrl = url;
     }
 }

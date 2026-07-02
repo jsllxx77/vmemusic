@@ -35,6 +35,7 @@ Current playback and library features:
 - Save and switch between multiple server profiles
 - Manage profiles and cache from the settings view
 - Keep connection management separate from the main search and library workflow
+- Create and edit saved servers through explicit settings actions
 - Remove songs from the playback queue
 - Clear the playback queue
 - Play, pause, stop, previous, and next

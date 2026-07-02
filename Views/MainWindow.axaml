@@ -29,11 +29,11 @@
         <Border Grid.Row="0" Background="#181B1F" Padding="18,14">
             <Grid ColumnDefinitions="*,320,Auto,Auto" ColumnSpacing="10">
                 <StackPanel Grid.Column="0" Spacing="2">
-                    <TextBlock Text="{Binding ServerProfileName, TargetNullValue=No server selected}"
+                    <TextBlock Text="{Binding ActiveServerName}"
                                Foreground="#F3F5F7"
                                FontWeight="SemiBold"
                                TextTrimming="CharacterEllipsis" />
-                    <TextBlock Text="{Binding ServerUrl}"
+                    <TextBlock Text="{Binding ActiveServerUrl}"
                                Foreground="#8E98A7"
                                FontSize="12"
                                TextTrimming="CharacterEllipsis" />
@@ -231,7 +231,7 @@
                               RowSpacing="14">
                             <Border Background="#15181B" Padding="14" CornerRadius="6">
                                 <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="12">
-                                    <TextBlock Text="Connection"
+                                    <TextBlock Text="{Binding ConnectionFormTitle}"
                                                Foreground="#F3F5F7"
                                                FontWeight="SemiBold" />
                                     <Grid Grid.Row="1"
@@ -265,7 +265,14 @@
                                     <StackPanel Grid.Row="2"
                                                 Orientation="Horizontal"
                                                 Spacing="8">
-                                        <Button Content="Save Server"
+                                        <Button Content="New"
+                                                Command="{Binding NewServerCommand}" />
+                                        <Button Content="Edit"
+                                                Command="{Binding EditSelectedServerCommand}"
+                                                IsEnabled="{Binding HasSelectedSavedServer}" />
+                                        <Button Content="Cancel"
+                                                Command="{Binding CancelServerEditCommand}" />
+                                        <Button Content="{Binding SaveServerButtonText}"
                                                 Command="{Binding SaveCurrentServerCommand}" />
                                         <Button Content="Test Connection"
                                                 Command="{Binding TestConnectionCommand}" />
@@ -325,10 +332,12 @@
                                 <Button Grid.Column="1"
                                         Content="Use"
                                         Command="{Binding UseSelectedServerCommand}"
+                                        IsEnabled="{Binding HasSelectedSavedServer}"
                                         VerticalAlignment="Top" />
                                 <Button Grid.Column="2"
                                         Content="Remove"
                                         Command="{Binding RemoveSelectedServerCommand}"
+                                        IsEnabled="{Binding HasSelectedSavedServer}"
                                         VerticalAlignment="Top" />
                             </Grid>
                         </Grid>
