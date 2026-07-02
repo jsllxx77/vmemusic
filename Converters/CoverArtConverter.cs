@@ -2,11 +2,14 @@ using System.Globalization;
 using System.Collections.Concurrent;
 using Avalonia.Data.Converters;
 using Avalonia.Media.Imaging;
+using VmeMusic.Services;
 
 namespace VmeMusic.Converters;
 
 public sealed class CoverArtConverter : IValueConverter
 {
+    public static CoverArtCacheService CacheService { get; set; } = new();
+
     private readonly ConcurrentDictionary<string, Lazy<Task<Bitmap?>>> _cache = new();
     private readonly HttpClient _httpClient = new();
 
@@ -27,7 +30,12 @@ public sealed class CoverArtConverter : IValueConverter
     {
         try
         {
-            await using var stream = await _httpClient.GetStreamAsync(url);
+            await using var stream = await CacheService.OpenReadOrDownloadAsync(url, _httpClient);
+            if (stream is null)
+            {
+                return null;
+            }
+
             return new Bitmap(stream);
         }
         catch

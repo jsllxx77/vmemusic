@@ -5,5 +5,6 @@ public enum LibraryViewKind
     Songs,
     Albums,
     Artists,
-    Playlists
+    Playlists,
+    Settings
 }

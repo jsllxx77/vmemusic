@@ -31,6 +31,9 @@ Current playback and library features:
 - Open albums and playlists into the playback queue
 - Show cover art from Navidrome
 - Cache cover art in memory while the app runs
+- Persist cover art on disk between runs
+- Save and switch between multiple server profiles
+- Manage profiles and cache from the settings view
 - Remove songs from the playback queue
 - Clear the playback queue
 - Play, pause, stop, previous, and next

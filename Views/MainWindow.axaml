@@ -27,29 +27,35 @@
 
     <Grid RowDefinitions="Auto,*,Auto" Background="#101214">
         <Border Grid.Row="0" Background="#181B1F" Padding="18,14">
-            <Grid ColumnDefinitions="220,180,180,Auto,Auto,*,Auto" ColumnSpacing="10">
+            <Grid ColumnDefinitions="180,220,160,160,Auto,Auto,*,Auto,Auto" ColumnSpacing="10">
                 <TextBox Grid.Column="0"
+                         PlaceholderText="Profile name"
+                         Text="{Binding ServerProfileName}" />
+                <TextBox Grid.Column="1"
                          PlaceholderText="Server URL"
                          Text="{Binding ServerUrl}" />
-                <TextBox Grid.Column="1"
+                <TextBox Grid.Column="2"
                          PlaceholderText="Username"
                          Text="{Binding Username}" />
-                <TextBox Grid.Column="2"
+                <TextBox Grid.Column="3"
                          PlaceholderText="Password"
                          PasswordChar="*"
                          Text="{Binding Password}" />
-                <Button Grid.Column="3"
+                <Button Grid.Column="4"
+                        Content="Save"
+                        Command="{Binding SaveCurrentServerCommand}" />
+                <Button Grid.Column="5"
                         Content="Test"
                         Command="{Binding TestConnectionCommand}" />
-                <Button Grid.Column="4"
-                        Content="Clear"
-                        Command="{Binding ClearSavedConnectionCommand}" />
-                <TextBox Grid.Column="5"
+                <Button Grid.Column="6"
+                        Content="Settings"
+                        Command="{Binding OpenSettingsCommand}" />
+                <TextBox Grid.Column="7"
                          PlaceholderText="Search songs"
                          Text="{Binding SearchQuery}" />
-                <Button Grid.Column="6"
-                        Content="Search"
-                        Command="{Binding SearchCommand}" />
+                <Button Grid.Column="8"
+                        Content="Clear"
+                        Command="{Binding ClearSavedConnectionCommand}" />
             </Grid>
         </Border>
 
@@ -64,12 +70,16 @@
                                Margin="0,24,0,0"
                                Foreground="#F3F5F7"
                                FontWeight="SemiBold" />
+                    <Button Content="Search songs"
+                            Command="{Binding SearchCommand}" />
                     <Button Content="Newest albums"
                             Command="{Binding LoadNewestAlbumsCommand}" />
                     <Button Content="Artists"
                             Command="{Binding LoadArtistsCommand}" />
                     <Button Content="Playlists"
                             Command="{Binding LoadPlaylistsCommand}" />
+                    <Button Content="Settings"
+                            Command="{Binding OpenSettingsCommand}" />
                 </StackPanel>
             </Border>
 
@@ -224,6 +234,59 @@
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
+
+                        <Grid IsVisible="{Binding IsSettingsView}"
+                              RowDefinitions="Auto,Auto,*"
+                              RowSpacing="14">
+                            <Border Background="#15181B" Padding="14" CornerRadius="6">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="Cover Art Cache"
+                                                   Foreground="#F3F5F7"
+                                                   FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding CoverArtCacheDirectory}"
+                                                   Foreground="#B8C0CC"
+                                                   TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <Button Grid.Column="1"
+                                            Content="Clear Cache"
+                                            Command="{Binding ClearCoverArtCacheCommand}"
+                                            VerticalAlignment="Top" />
+                                </Grid>
+                            </Border>
+
+                            <TextBlock Grid.Row="1"
+                                       Text="Saved Servers"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
+                                       Foreground="#F3F5F7" />
+
+                            <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                <ListBox ItemsSource="{Binding SavedServers}"
+                                         SelectedItem="{Binding SelectedSavedServer}">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate x:DataType="models:SavedServerProfile">
+                                            <StackPanel Margin="0,6">
+                                                <TextBlock Text="{Binding DisplayName}"
+                                                           Foreground="#F3F5F7" />
+                                                <TextBlock Text="{Binding ServerUrl}"
+                                                           Foreground="#8E98A7"
+                                                           FontSize="12"
+                                                           TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                                <Button Grid.Column="1"
+                                        Content="Use"
+                                        Command="{Binding UseSelectedServerCommand}"
+                                        VerticalAlignment="Top" />
+                                <Button Grid.Column="2"
+                                        Content="Remove"
+                                        Command="{Binding RemoveSelectedServerCommand}"
+                                        VerticalAlignment="Top" />
+                            </Grid>
+                        </Grid>
                     </Grid>
                 </Grid>
             </Border>

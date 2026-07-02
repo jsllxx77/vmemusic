@@ -2,6 +2,7 @@
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using VmeMusic.Converters;
 using VmeMusic.Models;
 using VmeMusic.Services;
 
@@ -12,9 +13,11 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private readonly NavidromeClient _navidromeClient;
     private readonly PlayerService _playerService;
     private readonly AppSettingsService _settingsService;
+    private readonly CoverArtCacheService _coverArtCacheService;
     private readonly DispatcherTimer _positionTimer;
     private bool _isUpdatingPlayerPosition;
     private int _currentQueueIndex = -1;
+    private string? _activeServerId;
 
     [ObservableProperty]
     private string serverUrl = "";
@@ -24,6 +27,12 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
     [ObservableProperty]
     private string password = "";
+
+    [ObservableProperty]
+    private string serverProfileName = "";
+
+    [ObservableProperty]
+    private string coverArtCacheDirectory = "";
 
     [ObservableProperty]
     private string searchQuery = "";
@@ -39,6 +48,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
     [ObservableProperty]
     private Playlist? selectedPlaylist;
+
+    [ObservableProperty]
+    private SavedServerProfile? selectedSavedServer;
 
     [ObservableProperty]
     private Song? currentSong;
@@ -80,18 +92,21 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private int volume = 80;
 
     public MainWindowViewModel()
-        : this(new NavidromeClient(), new PlayerService(), new AppSettingsService())
+        : this(new NavidromeClient(), new PlayerService(), new AppSettingsService(), new CoverArtCacheService())
     {
     }
 
     public MainWindowViewModel(
         NavidromeClient navidromeClient,
         PlayerService playerService,
-        AppSettingsService settingsService)
+        AppSettingsService settingsService,
+        CoverArtCacheService coverArtCacheService)
     {
         _navidromeClient = navidromeClient;
         _playerService = playerService;
         _settingsService = settingsService;
+        _coverArtCacheService = coverArtCacheService;
+        CoverArtConverter.CacheService = _coverArtCacheService;
         _playerService.EndReached += OnPlayerEndReached;
         _positionTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
         _positionTimer.Tick += (_, _) => UpdatePlaybackPosition();
@@ -107,6 +122,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
     public ObservableCollection<Playlist> Playlists { get; } = [];
 
+    public ObservableCollection<SavedServerProfile> SavedServers { get; } = [];
+
     public ObservableCollection<Song> PlaybackQueue { get; } = [];
 
     public bool IsSongsView => CurrentView == LibraryViewKind.Songs;
@@ -116,6 +133,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     public bool IsArtistsView => CurrentView == LibraryViewKind.Artists;
 
     public bool IsPlaylistsView => CurrentView == LibraryViewKind.Playlists;
+
+    public bool IsSettingsView => CurrentView == LibraryViewKind.Settings;
 
     [RelayCommand]
     private async Task TestConnectionAsync()
@@ -129,7 +148,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         {
             await _navidromeClient.PingAsync();
             IsConnected = true;
-            await _settingsService.SaveConnectionAsync(CreateConnection());
+            await SaveCurrentServerCoreAsync(true);
             StatusMessage = "Connected to Navidrome.";
         });
     }
@@ -157,9 +176,96 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         SelectedAlbum = null;
         SelectedArtist = null;
         SelectedPlaylist = null;
+        SelectedSavedServer = null;
+        SavedServers.Clear();
+        ServerProfileName = "";
+        _activeServerId = null;
         CurrentView = LibraryViewKind.Songs;
         ContentTitle = "Songs";
         StatusMessage = "Saved connection cleared.";
+    }
+
+    [RelayCommand]
+    private void OpenSettings()
+    {
+        CurrentView = LibraryViewKind.Settings;
+        ContentTitle = "Settings";
+        StatusMessage = "Manage saved servers and cache settings.";
+    }
+
+    [RelayCommand]
+    private async Task SaveCurrentServerAsync()
+    {
+        if (!ConfigureClient())
+        {
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            await SaveCurrentServerCoreAsync(true);
+            StatusMessage = "Saved current server profile.";
+        });
+    }
+
+    [RelayCommand]
+    private async Task UseSelectedServerAsync()
+    {
+        if (SelectedSavedServer is null)
+        {
+            StatusMessage = "Select a saved server first.";
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            await _settingsService.SetActiveServerAsync(SelectedSavedServer.Id);
+            _activeServerId = SelectedSavedServer.Id;
+            ServerProfileName = SelectedSavedServer.DisplayName;
+            ServerUrl = SelectedSavedServer.ServerUrl;
+            Username = SelectedSavedServer.Username;
+            Password = await LoadServerPasswordAsync(SelectedSavedServer);
+            _navidromeClient.Configure(CreateConnection());
+            StatusMessage = $"Active server set to {SelectedSavedServer.DisplayName}.";
+        });
+    }
+
+    [RelayCommand]
+    private async Task RemoveSelectedServerAsync()
+    {
+        if (SelectedSavedServer is null)
+        {
+            StatusMessage = "Select a saved server first.";
+            return;
+        }
+
+        var removedId = SelectedSavedServer.Id;
+        await RunBusyAsync(async () =>
+        {
+            await _settingsService.RemoveServerAsync(removedId);
+            await LoadSavedServerProfilesAsync();
+            if (_activeServerId == removedId)
+            {
+                var connection = await _settingsService.LoadConnectionAsync();
+                if (connection is not null)
+                {
+                    ApplyConnection(connection, SavedServers.FirstOrDefault());
+                }
+            }
+
+            StatusMessage = "Removed saved server.";
+        });
+    }
+
+    [RelayCommand]
+    private async Task ClearCoverArtCacheAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            _coverArtCacheService.Clear();
+            await _settingsService.SaveCoverArtCacheDirectoryAsync(CoverArtCacheDirectory);
+            StatusMessage = "Cleared cover art cache.";
+        });
     }
 
     [RelayCommand]
@@ -501,6 +607,19 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(IsAlbumsView));
         OnPropertyChanged(nameof(IsArtistsView));
         OnPropertyChanged(nameof(IsPlaylistsView));
+        OnPropertyChanged(nameof(IsSettingsView));
+    }
+
+    partial void OnSelectedSavedServerChanged(SavedServerProfile? value)
+    {
+        if (value is null)
+        {
+            return;
+        }
+
+        ServerProfileName = value.DisplayName;
+        ServerUrl = value.ServerUrl;
+        Username = value.Username;
     }
 
     private void ReplaceSongs(IReadOnlyList<Song> songs)
@@ -565,16 +684,25 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         }
 
         SelectedSong = song;
-        _playerService.Volume = Volume;
-        _playerService.PlayUrl(_navidromeClient.GetStreamUrl(song.Id));
-        CurrentSong = song;
-        IsPlaying = true;
-        PlaybackPosition = 0;
-        PlaybackDuration = song.DurationSeconds ?? 0;
-        CanSeek = PlaybackDuration > 0;
-        PlaybackPositionText = "0:00";
-        PlaybackDurationText = FormatDuration(TimeSpan.FromSeconds(PlaybackDuration));
-        StatusMessage = $"Playing {song.Title}.";
+        try
+        {
+            _playerService.Volume = Volume;
+            _playerService.PlayUrl(_navidromeClient.GetStreamUrl(song.Id));
+            CurrentSong = song;
+            IsPlaying = true;
+            PlaybackPosition = 0;
+            PlaybackDuration = song.DurationSeconds ?? 0;
+            CanSeek = PlaybackDuration > 0;
+            PlaybackPositionText = "0:00";
+            PlaybackDurationText = FormatDuration(TimeSpan.FromSeconds(PlaybackDuration));
+            StatusMessage = $"Playing {song.Title}.";
+        }
+        catch (Exception ex)
+        {
+            IsPlaying = false;
+            StatusMessage = $"Could not start playback: {ex.Message}";
+            return;
+        }
 
         try
         {
@@ -628,16 +756,18 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
         try
         {
+            var settings = await _settingsService.LoadSettingsAsync();
+            CoverArtCacheDirectory = settings.CoverArtCacheDirectory;
+            _coverArtCacheService.Configure(CoverArtCacheDirectory);
+            await LoadSavedServerProfilesAsync(settings);
+
             var connection = await _settingsService.LoadConnectionAsync();
             if (connection is null)
             {
                 return;
             }
 
-            ServerUrl = connection.BaseUrl;
-            Username = connection.Username;
-            Password = connection.Password;
-            _navidromeClient.Configure(connection);
+            ApplyConnection(connection, SavedServers.FirstOrDefault(server => server.Id == settings.ActiveServerId));
             StatusMessage = "Loaded saved Navidrome connection.";
         }
         catch (Exception ex)
@@ -668,5 +798,51 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         _positionTimer.Stop();
         _playerService.EndReached -= OnPlayerEndReached;
         _playerService.Dispose();
+    }
+
+    private async Task SaveCurrentServerCoreAsync(bool setActive)
+    {
+        await _settingsService.SaveServerAsync(_activeServerId, ServerProfileName, CreateConnection(), setActive);
+        var settings = await _settingsService.LoadSettingsAsync();
+        _activeServerId = settings.ActiveServerId;
+        await LoadSavedServerProfilesAsync(settings);
+        SelectedSavedServer = SavedServers.FirstOrDefault(server => server.Id == _activeServerId);
+    }
+
+    private async Task LoadSavedServerProfilesAsync(AppSettings? settings = null)
+    {
+        settings ??= await _settingsService.LoadSettingsAsync();
+        SavedServers.Clear();
+        foreach (var server in settings.Servers.OrderBy(server => server.DisplayName, StringComparer.CurrentCultureIgnoreCase))
+        {
+            SavedServers.Add(server);
+        }
+
+        _activeServerId = settings.ActiveServerId;
+        SelectedSavedServer = SavedServers.FirstOrDefault(server => server.Id == _activeServerId)
+            ?? SavedServers.FirstOrDefault();
+    }
+
+    private void ApplyConnection(NavidromeConnection connection, SavedServerProfile? profile)
+    {
+        ServerUrl = connection.BaseUrl;
+        Username = connection.Username;
+        Password = connection.Password;
+        ServerProfileName = profile?.DisplayName ?? $"{connection.Username}@{connection.BaseUrl}";
+        _activeServerId = profile?.Id;
+        _navidromeClient.Configure(connection);
+    }
+
+    private async Task<string> LoadServerPasswordAsync(SavedServerProfile profile)
+    {
+        var settings = await _settingsService.LoadSettingsAsync();
+        var connection = await _settingsService.LoadConnectionAsync();
+        if (settings.ActiveServerId == profile.Id && connection is not null)
+        {
+            return connection.Password;
+        }
+
+        var protectedPassword = settings.Servers.FirstOrDefault(server => server.Id == profile.Id)?.ProtectedPassword ?? "";
+        return new PasswordProtector().Unprotect(protectedPassword);
     }
 }
