@@ -34,6 +34,7 @@ Current playback and library features:
 - Persist cover art on disk between runs
 - Save and switch between multiple server profiles
 - Manage profiles and cache from the settings view
+- Keep connection management separate from the main search and library workflow
 - Remove songs from the playback queue
 - Clear the playback queue
 - Play, pause, stop, previous, and next
