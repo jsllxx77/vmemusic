@@ -36,6 +36,16 @@ Current playback and library features:
 - Play, pause, stop, previous, and next
 - Track playback progress and volume
 
+## Windows build
+
+GitHub Actions builds a self-contained Windows x64 zip on every push and pull request.
+Create a version tag to publish a GitHub Release:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
 ## Settings
 
 VmeMusic stores the last successful Navidrome connection in the user app data folder.
