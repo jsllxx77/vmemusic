@@ -29,6 +29,15 @@ public partial class MainWindow : Window
         }
     }
 
+    private void ArtistsList_OnDoubleTapped(object? sender, TappedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel &&
+            viewModel.LoadSelectedArtistCommand.CanExecute(null))
+        {
+            viewModel.LoadSelectedArtistCommand.Execute(null);
+        }
+    }
+
     private void PlaylistsList_OnDoubleTapped(object? sender, TappedEventArgs e)
     {
         if (DataContext is MainWindowViewModel viewModel &&

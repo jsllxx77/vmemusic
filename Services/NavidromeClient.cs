@@ -88,6 +88,52 @@ public sealed class NavidromeClient
         return albums.EnumerateArray().Select(ParseAlbum).Select(WithCoverArtUrl).ToArray();
     }
 
+    public async Task<IReadOnlyList<Artist>> GetArtistsAsync(CancellationToken cancellationToken = default)
+    {
+        using var document = await GetAsync("getArtists", null, cancellationToken);
+
+        var response = document.RootElement.GetProperty("subsonic-response");
+        EnsureOk(response);
+
+        if (!response.TryGetProperty("artists", out var artistsRoot) ||
+            !artistsRoot.TryGetProperty("index", out var indexes) ||
+            indexes.ValueKind != JsonValueKind.Array)
+        {
+            return Array.Empty<Artist>();
+        }
+
+        return indexes
+            .EnumerateArray()
+            .Where(index => index.TryGetProperty("artist", out var artists) && artists.ValueKind == JsonValueKind.Array)
+            .SelectMany(index => index.GetProperty("artist").EnumerateArray())
+            .Select(ParseArtist)
+            .Select(WithCoverArtUrl)
+            .OrderBy(artist => artist.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ToArray();
+    }
+
+    public async Task<IReadOnlyList<Album>> GetArtistAlbumsAsync(
+        string artistId,
+        CancellationToken cancellationToken = default)
+    {
+        using var document = await GetAsync(
+            "getArtist",
+            new Dictionary<string, string> { ["id"] = artistId },
+            cancellationToken);
+
+        var response = document.RootElement.GetProperty("subsonic-response");
+        EnsureOk(response);
+
+        if (!response.TryGetProperty("artist", out var artist) ||
+            !artist.TryGetProperty("album", out var albums) ||
+            albums.ValueKind != JsonValueKind.Array)
+        {
+            return Array.Empty<Album>();
+        }
+
+        return albums.EnumerateArray().Select(ParseAlbum).Select(WithCoverArtUrl).ToArray();
+    }
+
     public async Task<IReadOnlyList<Song>> GetAlbumSongsAsync(
         string albumId,
         CancellationToken cancellationToken = default)
@@ -261,6 +307,16 @@ public sealed class NavidromeClient
             GetNullableInt(element, "year"));
     }
 
+    private static Artist ParseArtist(JsonElement element)
+    {
+        return new Artist(
+            GetString(element, "id"),
+            GetString(element, "name", "Unknown artist"),
+            GetNullableString(element, "coverArt"),
+            null,
+            GetNullableInt(element, "albumCount"));
+    }
+
     private static Playlist ParsePlaylist(JsonElement element)
     {
         return new Playlist(
@@ -280,6 +336,11 @@ public sealed class NavidromeClient
     private Album WithCoverArtUrl(Album album)
     {
         return album with { CoverArtUrl = GetCoverArtUrl(album.CoverArt, 160) };
+    }
+
+    private Artist WithCoverArtUrl(Artist artist)
+    {
+        return artist with { CoverArtUrl = GetCoverArtUrl(artist.CoverArt, 160) };
     }
 
     private Playlist WithCoverArtUrl(Playlist playlist)

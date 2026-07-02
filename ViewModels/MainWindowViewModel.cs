@@ -35,6 +35,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private Album? selectedAlbum;
 
     [ObservableProperty]
+    private Artist? selectedArtist;
+
+    [ObservableProperty]
     private Playlist? selectedPlaylist;
 
     [ObservableProperty]
@@ -97,6 +100,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
     public ObservableCollection<Album> Albums { get; } = [];
 
+    public ObservableCollection<Artist> Artists { get; } = [];
+
     public ObservableCollection<Playlist> Playlists { get; } = [];
 
     public ObservableCollection<Song> PlaybackQueue { get; } = [];
@@ -104,6 +109,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     public bool IsSongsView => CurrentView == LibraryViewKind.Songs;
 
     public bool IsAlbumsView => CurrentView == LibraryViewKind.Albums;
+
+    public bool IsArtistsView => CurrentView == LibraryViewKind.Artists;
 
     public bool IsPlaylistsView => CurrentView == LibraryViewKind.Playlists;
 
@@ -134,15 +141,76 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         IsConnected = false;
         SearchResults.Clear();
         Albums.Clear();
+        Artists.Clear();
         Playlists.Clear();
         PlaybackQueue.Clear();
         CurrentSong = null;
         SelectedSong = null;
         SelectedAlbum = null;
+        SelectedArtist = null;
         SelectedPlaylist = null;
         CurrentView = LibraryViewKind.Songs;
         ContentTitle = "Songs";
         StatusMessage = "Saved connection cleared.";
+    }
+
+    [RelayCommand]
+    private async Task LoadArtistsAsync()
+    {
+        if (!ConfigureClient())
+        {
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            CurrentView = LibraryViewKind.Artists;
+            ContentTitle = "Artists";
+            Artists.Clear();
+            var artists = await _navidromeClient.GetArtistsAsync();
+            foreach (var artist in artists)
+            {
+                Artists.Add(artist);
+            }
+
+            SelectedArtist = Artists.FirstOrDefault();
+            StatusMessage = artists.Count == 0
+                ? "No artists found."
+                : $"Loaded {artists.Count} artists.";
+        });
+    }
+
+    [RelayCommand]
+    private async Task LoadSelectedArtistAsync()
+    {
+        if (SelectedArtist is null)
+        {
+            StatusMessage = "Select an artist first.";
+            return;
+        }
+
+        if (!ConfigureClient())
+        {
+            return;
+        }
+
+        var artist = SelectedArtist;
+        await RunBusyAsync(async () =>
+        {
+            CurrentView = LibraryViewKind.Albums;
+            ContentTitle = artist.Name;
+            Albums.Clear();
+            var albums = await _navidromeClient.GetArtistAlbumsAsync(artist.Id);
+            foreach (var album in albums)
+            {
+                Albums.Add(album);
+            }
+
+            SelectedAlbum = Albums.FirstOrDefault();
+            StatusMessage = albums.Count == 0
+                ? "Artist has no albums."
+                : $"Loaded {albums.Count} albums from {artist.Name}.";
+        });
     }
 
     [RelayCommand]
@@ -322,6 +390,49 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     }
 
     [RelayCommand]
+    private void RemoveSelectedFromQueue()
+    {
+        if (SelectedSong is null || !PlaybackQueue.Contains(SelectedSong))
+        {
+            StatusMessage = "Select a queued song first.";
+            return;
+        }
+
+        var removedIndex = PlaybackQueue.IndexOf(SelectedSong);
+        var wasCurrentSong = CurrentSong?.Id == SelectedSong.Id;
+        PlaybackQueue.Remove(SelectedSong);
+
+        if (PlaybackQueue.Count == 0)
+        {
+            _currentQueueIndex = -1;
+            SelectedSong = null;
+        }
+        else
+        {
+            _currentQueueIndex = Math.Clamp(_currentQueueIndex, 0, PlaybackQueue.Count - 1);
+            if (removedIndex <= _currentQueueIndex)
+            {
+                _currentQueueIndex = Math.Max(0, _currentQueueIndex - 1);
+            }
+
+            SelectedSong = PlaybackQueue[Math.Clamp(removedIndex, 0, PlaybackQueue.Count - 1)];
+        }
+
+        StatusMessage = wasCurrentSong
+            ? "Removed current song from queue. Playback will continue until stopped or changed."
+            : "Removed song from queue.";
+    }
+
+    [RelayCommand]
+    private void ClearQueue()
+    {
+        PlaybackQueue.Clear();
+        _currentQueueIndex = -1;
+        SelectedSong = SearchResults.FirstOrDefault();
+        StatusMessage = "Playback queue cleared.";
+    }
+
+    [RelayCommand]
     private void TogglePlayback()
     {
         _playerService.Pause();
@@ -379,6 +490,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
         OnPropertyChanged(nameof(IsSongsView));
         OnPropertyChanged(nameof(IsAlbumsView));
+        OnPropertyChanged(nameof(IsArtistsView));
         OnPropertyChanged(nameof(IsPlaylistsView));
     }
 

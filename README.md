@@ -26,9 +26,13 @@ Current playback and library features:
 
 - Search songs
 - Load newest albums
+- Browse artists and open artist albums
 - Load playlists
 - Open albums and playlists into the playback queue
 - Show cover art from Navidrome
+- Cache cover art in memory while the app runs
+- Remove songs from the playback queue
+- Clear the playback queue
 - Play, pause, stop, previous, and next
 - Track playback progress and volume
 

@@ -66,6 +66,8 @@
                                FontWeight="SemiBold" />
                     <Button Content="Newest albums"
                             Command="{Binding LoadNewestAlbumsCommand}" />
+                    <Button Content="Artists"
+                            Command="{Binding LoadArtistsCommand}" />
                     <Button Content="Playlists"
                             Command="{Binding LoadPlaylistsCommand}" />
                 </StackPanel>
@@ -159,6 +161,36 @@
                             </ListBox.ItemTemplate>
                         </ListBox>
 
+                        <ListBox ItemsSource="{Binding Artists}"
+                                 SelectedItem="{Binding SelectedArtist}"
+                                 DoubleTapped="ArtistsList_OnDoubleTapped"
+                                 IsVisible="{Binding IsArtistsView}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="models:Artist">
+                                    <Grid ColumnDefinitions="64,*,100" Margin="0,7">
+                                        <Border Grid.Column="0"
+                                                Width="48"
+                                                Height="48"
+                                                Background="#242A30"
+                                                CornerRadius="24">
+                                            <Image Source="{Binding CoverArtUrl, Converter={StaticResource CoverArtConverter}}"
+                                                   Stretch="UniformToFill" />
+                                        </Border>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Name}"
+                                                   Foreground="#F3F5F7"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Grid.Column="2"
+                                                   Text="{Binding AlbumCount}"
+                                                   Foreground="#8E98A7"
+                                                   VerticalAlignment="Center"
+                                                   HorizontalAlignment="Right" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
                         <ListBox ItemsSource="{Binding Playlists}"
                                  SelectedItem="{Binding SelectedPlaylist}"
                                  DoubleTapped="PlaylistsList_OnDoubleTapped"
@@ -223,12 +255,20 @@
                         <Image Source="{Binding CurrentSong.CoverArtUrl, Converter={StaticResource CoverArtConverter}}"
                                Stretch="UniformToFill" />
                     </Border>
-                    <TextBlock Grid.Row="4"
-                               Text="Queue"
-                               FontSize="16"
-                               FontWeight="SemiBold"
-                               Foreground="#F3F5F7"
-                               Margin="0,4,0,10" />
+                    <Grid Grid.Row="4" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6" Margin="0,4,0,10">
+                        <TextBlock Grid.Column="0"
+                                   Text="Queue"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Foreground="#F3F5F7"
+                                   VerticalAlignment="Center" />
+                        <Button Grid.Column="1"
+                                Content="Remove"
+                                Command="{Binding RemoveSelectedFromQueueCommand}" />
+                        <Button Grid.Column="2"
+                                Content="Clear"
+                                Command="{Binding ClearQueueCommand}" />
+                    </Grid>
                     <ListBox Grid.Row="5"
                              ItemsSource="{Binding PlaybackQueue}"
                              SelectedItem="{Binding SelectedSong}">
