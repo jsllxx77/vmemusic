@@ -1,0 +1,149 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:VmeMusic.ViewModels"
+        xmlns:models="using:VmeMusic.Models"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="760"
+        x:Class="VmeMusic.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="VmeMusic"
+        Width="1180"
+        Height="760"
+        MinWidth="940"
+        MinHeight="620">
+
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*,Auto" Background="#101214">
+        <Border Grid.Row="0" Background="#181B1F" Padding="18,14">
+            <Grid ColumnDefinitions="220,180,180,Auto,*,Auto" ColumnSpacing="10">
+                <TextBox Grid.Column="0"
+                         PlaceholderText="Server URL"
+                         Text="{Binding ServerUrl}" />
+                <TextBox Grid.Column="1"
+                         PlaceholderText="Username"
+                         Text="{Binding Username}" />
+                <TextBox Grid.Column="2"
+                         PlaceholderText="Password"
+                         PasswordChar="*"
+                         Text="{Binding Password}" />
+                <Button Grid.Column="3"
+                        Content="Test"
+                        Command="{Binding TestConnectionCommand}" />
+                <TextBox Grid.Column="4"
+                         PlaceholderText="Search songs"
+                         Text="{Binding SearchQuery}" />
+                <Button Grid.Column="5"
+                        Content="Search"
+                        Command="{Binding SearchCommand}" />
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1" ColumnDefinitions="190,*,300">
+            <Border Grid.Column="0" Background="#15181B" Padding="16">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="VmeMusic"
+                               FontSize="24"
+                               FontWeight="SemiBold"
+                               Foreground="#F3F5F7" />
+                    <TextBlock Text="Search"
+                               Margin="0,24,0,0"
+                               Foreground="#F3F5F7"
+                               FontWeight="SemiBold" />
+                    <TextBlock Text="Albums" Foreground="#9CA3AF" />
+                    <TextBlock Text="Artists" Foreground="#9CA3AF" />
+                    <TextBlock Text="Playlists" Foreground="#9CA3AF" />
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="1" Background="#101214" Padding="18">
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock Text="Songs"
+                               FontSize="20"
+                               FontWeight="SemiBold"
+                               Foreground="#F3F5F7"
+                               Margin="0,0,0,12" />
+
+                    <ListBox Grid.Row="1"
+                             ItemsSource="{Binding SearchResults}"
+                             SelectedItem="{Binding SelectedSong}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:Song">
+                                <Grid ColumnDefinitions="*,170,170,70" Margin="0,6">
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding Title}"
+                                               Foreground="#F3F5F7"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding Artist}"
+                                               Foreground="#B8C0CC"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Grid.Column="2"
+                                               Text="{Binding Album}"
+                                               Foreground="#8E98A7"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Grid.Column="3"
+                                               Text="{Binding DurationSeconds}"
+                                               Foreground="#8E98A7"
+                                               HorizontalAlignment="Right" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="2" Background="#15181B" Padding="18">
+                <Grid RowDefinitions="Auto,Auto,Auto,*">
+                    <TextBlock Text="Now Playing"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Foreground="#F3F5F7" />
+                    <TextBlock Grid.Row="1"
+                               Text="{Binding CurrentSong.Title, FallbackValue=Nothing playing}"
+                               Foreground="#F3F5F7"
+                               FontSize="16"
+                               Margin="0,18,0,0"
+                               TextWrapping="Wrap" />
+                    <TextBlock Grid.Row="2"
+                               Text="{Binding CurrentSong.Artist}"
+                               Foreground="#9CA3AF"
+                               Margin="0,4,0,0"
+                               TextWrapping="Wrap" />
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="2" Background="#181B1F" Padding="18,12">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto,2*" ColumnSpacing="10">
+                <TextBlock Grid.Column="0"
+                           Text="{Binding StatusMessage}"
+                           Foreground="#B8C0CC"
+                           VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis" />
+                <Button Grid.Column="1"
+                        Content="Play"
+                        Command="{Binding PlaySelectedCommand}" />
+                <Button Grid.Column="2"
+                        Content="Pause"
+                        Command="{Binding TogglePlaybackCommand}" />
+                <Button Grid.Column="3"
+                        Content="Stop"
+                        Command="{Binding StopCommand}" />
+                <Slider Grid.Column="4"
+                        Minimum="0"
+                        Maximum="100"
+                        Value="0"
+                        IsEnabled="False"
+                        VerticalAlignment="Center" />
+            </Grid>
+        </Border>
+    </Grid>
+
+</Window>
