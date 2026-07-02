@@ -75,7 +75,8 @@
 
                     <ListBox Grid.Row="1"
                              ItemsSource="{Binding SearchResults}"
-                             SelectedItem="{Binding SelectedSong}">
+                             SelectedItem="{Binding SelectedSong}"
+                             DoubleTapped="SongsList_OnDoubleTapped">
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="models:Song">
                                 <Grid ColumnDefinitions="*,170,170,70" Margin="0,6">
@@ -103,7 +104,7 @@
             </Border>
 
             <Border Grid.Column="2" Background="#15181B" Padding="18">
-                <Grid RowDefinitions="Auto,Auto,Auto,*">
+                <Grid RowDefinitions="Auto,Auto,Auto,Auto,*">
                     <TextBlock Text="Now Playing"
                                FontSize="18"
                                FontWeight="SemiBold"
@@ -119,31 +120,73 @@
                                Foreground="#9CA3AF"
                                Margin="0,4,0,0"
                                TextWrapping="Wrap" />
+                    <TextBlock Grid.Row="3"
+                               Text="Queue"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Foreground="#F3F5F7"
+                               Margin="0,28,0,10" />
+                    <ListBox Grid.Row="4"
+                             ItemsSource="{Binding PlaybackQueue}"
+                             SelectedItem="{Binding SelectedSong}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:Song">
+                                <StackPanel Margin="0,5">
+                                    <TextBlock Text="{Binding Title}"
+                                               Foreground="#F3F5F7"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding Artist}"
+                                               Foreground="#8E98A7"
+                                               FontSize="12"
+                                               TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
                 </Grid>
             </Border>
         </Grid>
 
         <Border Grid.Row="2" Background="#181B1F" Padding="18,12">
-            <Grid ColumnDefinitions="*,Auto,Auto,Auto,2*" ColumnSpacing="10">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,2*,Auto,Auto,120" ColumnSpacing="10">
                 <TextBlock Grid.Column="0"
                            Text="{Binding StatusMessage}"
                            Foreground="#B8C0CC"
                            VerticalAlignment="Center"
                            TextTrimming="CharacterEllipsis" />
                 <Button Grid.Column="1"
+                        Content="Prev"
+                        Command="{Binding PlayPreviousCommand}" />
+                <Button Grid.Column="2"
                         Content="Play"
                         Command="{Binding PlaySelectedCommand}" />
-                <Button Grid.Column="2"
+                <Button Grid.Column="3"
                         Content="Pause"
                         Command="{Binding TogglePlaybackCommand}" />
-                <Button Grid.Column="3"
+                <Button Grid.Column="4"
                         Content="Stop"
                         Command="{Binding StopCommand}" />
-                <Slider Grid.Column="4"
+                <Button Grid.Column="5"
+                        Content="Next"
+                        Command="{Binding PlayNextCommand}" />
+                <Slider Grid.Column="6"
+                        Minimum="0"
+                        Maximum="{Binding PlaybackDuration}"
+                        Value="{Binding PlaybackPosition}"
+                        IsEnabled="False"
+                        VerticalAlignment="Center" />
+                <TextBlock Grid.Column="7"
+                           Text="{Binding PlaybackPositionText}"
+                           Foreground="#B8C0CC"
+                           VerticalAlignment="Center" />
+                <TextBlock Grid.Column="8"
+                           Text="{Binding PlaybackDurationText}"
+                           Foreground="#8E98A7"
+                           VerticalAlignment="Center" />
+                <Slider Grid.Column="9"
                         Minimum="0"
                         Maximum="100"
-                        Value="0"
-                        IsEnabled="False"
+                        Value="{Binding Volume}"
                         VerticalAlignment="Center" />
             </Grid>
         </Border>

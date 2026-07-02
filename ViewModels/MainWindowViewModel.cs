@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VmeMusic.Models;
@@ -11,6 +12,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private readonly NavidromeClient _navidromeClient;
     private readonly PlayerService _playerService;
     private readonly AppSettingsService _settingsService;
+    private readonly DispatcherTimer _positionTimer;
+    private bool _isUpdatingPlayerPosition;
+    private int _currentQueueIndex = -1;
 
     [ObservableProperty]
     private string serverUrl = "";
@@ -42,6 +46,21 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private bool isPlaying;
 
+    [ObservableProperty]
+    private double playbackPosition;
+
+    [ObservableProperty]
+    private double playbackDuration;
+
+    [ObservableProperty]
+    private string playbackPositionText = "0:00";
+
+    [ObservableProperty]
+    private string playbackDurationText = "0:00";
+
+    [ObservableProperty]
+    private int volume = 80;
+
     public MainWindowViewModel()
         : this(new NavidromeClient(), new PlayerService(), new AppSettingsService())
     {
@@ -55,10 +74,16 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         _navidromeClient = navidromeClient;
         _playerService = playerService;
         _settingsService = settingsService;
+        _playerService.EndReached += OnPlayerEndReached;
+        _positionTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
+        _positionTimer.Tick += (_, _) => UpdatePlaybackPosition();
+        _positionTimer.Start();
         _ = LoadSavedConnectionAsync();
     }
 
     public ObservableCollection<Song> SearchResults { get; } = [];
+
+    public ObservableCollection<Song> PlaybackQueue { get; } = [];
 
     [RelayCommand]
     private async Task TestConnectionAsync()
@@ -108,6 +133,14 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
                 SearchResults.Add(song);
             }
 
+            PlaybackQueue.Clear();
+            foreach (var song in songs)
+            {
+                PlaybackQueue.Add(song);
+            }
+
+            _currentQueueIndex = PlaybackQueue.Count > 0 ? 0 : -1;
+            SelectedSong = PlaybackQueue.FirstOrDefault();
             StatusMessage = songs.Count == 0
                 ? "No songs found."
                 : $"Found {songs.Count} songs.";
@@ -128,20 +161,39 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        var song = SelectedSong;
-        _playerService.PlayUrl(_navidromeClient.GetStreamUrl(song.Id));
-        CurrentSong = song;
-        IsPlaying = true;
-        StatusMessage = $"Playing {song.Title}.";
+        await PlaySongAsync(SelectedSong);
+    }
 
-        try
+    [RelayCommand]
+    private async Task PlayNextAsync()
+    {
+        if (PlaybackQueue.Count == 0)
         {
-            await _navidromeClient.ScrobbleAsync(song.Id);
+            StatusMessage = "Playback queue is empty.";
+            return;
         }
-        catch (Exception ex)
+
+        var nextIndex = _currentQueueIndex < 0
+            ? 0
+            : (_currentQueueIndex + 1) % PlaybackQueue.Count;
+
+        await PlaySongAsync(PlaybackQueue[nextIndex]);
+    }
+
+    [RelayCommand]
+    private async Task PlayPreviousAsync()
+    {
+        if (PlaybackQueue.Count == 0)
         {
-            StatusMessage = $"Playing {song.Title}. Scrobble failed: {ex.Message}";
+            StatusMessage = "Playback queue is empty.";
+            return;
         }
+
+        var previousIndex = _currentQueueIndex <= 0
+            ? PlaybackQueue.Count - 1
+            : _currentQueueIndex - 1;
+
+        await PlaySongAsync(PlaybackQueue[previousIndex]);
     }
 
     [RelayCommand]
@@ -157,6 +209,10 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
         _playerService.Stop();
         IsPlaying = false;
+        PlaybackPosition = 0;
+        PlaybackDuration = 0;
+        PlaybackPositionText = "0:00";
+        PlaybackDurationText = "0:00";
         StatusMessage = "Playback stopped.";
     }
 
@@ -182,6 +238,103 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private NavidromeConnection CreateConnection()
     {
         return new NavidromeConnection(ServerUrl, Username, Password);
+    }
+
+    partial void OnVolumeChanged(int value)
+    {
+        _playerService.Volume = value;
+    }
+
+    partial void OnPlaybackPositionChanged(double value)
+    {
+        if (_isUpdatingPlayerPosition)
+        {
+            return;
+        }
+
+        PlaybackPositionText = FormatDuration(TimeSpan.FromSeconds(value));
+    }
+
+    private async Task PlaySongAsync(Song song)
+    {
+        if (!ConfigureClient())
+        {
+            return;
+        }
+
+        if (PlaybackQueue.Count == 0)
+        {
+            PlaybackQueue.Add(song);
+        }
+
+        _currentQueueIndex = PlaybackQueue.IndexOf(song);
+        if (_currentQueueIndex < 0)
+        {
+            PlaybackQueue.Add(song);
+            _currentQueueIndex = PlaybackQueue.Count - 1;
+        }
+
+        SelectedSong = song;
+        _playerService.Volume = Volume;
+        _playerService.PlayUrl(_navidromeClient.GetStreamUrl(song.Id));
+        CurrentSong = song;
+        IsPlaying = true;
+        PlaybackPosition = 0;
+        PlaybackDuration = song.DurationSeconds ?? 0;
+        PlaybackPositionText = "0:00";
+        PlaybackDurationText = FormatDuration(TimeSpan.FromSeconds(PlaybackDuration));
+        StatusMessage = $"Playing {song.Title}.";
+
+        try
+        {
+            await _navidromeClient.ScrobbleAsync(song.Id);
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Playing {song.Title}. Scrobble failed: {ex.Message}";
+        }
+    }
+
+    private async void OnPlayerEndReached(object? sender, EventArgs e)
+    {
+        await Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+            IsPlaying = false;
+            await PlayNextAsync();
+        });
+    }
+
+    private void UpdatePlaybackPosition()
+    {
+        if (!IsPlaying)
+        {
+            return;
+        }
+
+        var position = _playerService.Position;
+        var duration = _playerService.Duration;
+
+        _isUpdatingPlayerPosition = true;
+        PlaybackPosition = position.TotalSeconds;
+        if (duration.TotalSeconds > 0)
+        {
+            PlaybackDuration = duration.TotalSeconds;
+            PlaybackDurationText = FormatDuration(duration);
+        }
+
+        PlaybackPositionText = FormatDuration(position);
+        _isUpdatingPlayerPosition = false;
+        IsPlaying = _playerService.IsPlaying;
+    }
+
+    private static string FormatDuration(TimeSpan duration)
+    {
+        if (duration.TotalHours >= 1)
+        {
+            return $"{(int)duration.TotalHours}:{duration.Minutes:00}:{duration.Seconds:00}";
+        }
+
+        return $"{(int)duration.TotalMinutes}:{duration.Seconds:00}";
     }
 
     private async Task LoadSavedConnectionAsync()
@@ -225,6 +378,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
     public void Dispose()
     {
+        _positionTimer.Stop();
+        _playerService.EndReached -= OnPlayerEndReached;
         _playerService.Dispose();
     }
 }

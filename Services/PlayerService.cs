@@ -9,6 +9,18 @@ public sealed class PlayerService : IDisposable
 
     public bool IsPlaying => _mediaPlayer?.IsPlaying == true;
 
+    public TimeSpan Position => TimeSpan.FromMilliseconds(Math.Max(0, _mediaPlayer?.Time ?? 0));
+
+    public TimeSpan Duration => TimeSpan.FromMilliseconds(Math.Max(0, _mediaPlayer?.Length ?? 0));
+
+    public int Volume
+    {
+        get => _mediaPlayer?.Volume ?? 80;
+        set => EnsurePlayer().MediaPlayer.Volume = Math.Clamp(value, 0, 100);
+    }
+
+    public event EventHandler? EndReached;
+
     public void PlayUrl(string url)
     {
         var (libVlc, mediaPlayer) = EnsurePlayer();
@@ -42,6 +54,8 @@ public sealed class PlayerService : IDisposable
         Core.Initialize();
         _libVlc = new LibVLC();
         _mediaPlayer = new MediaPlayer(_libVlc);
+        _mediaPlayer.Volume = 80;
+        _mediaPlayer.EndReached += (_, _) => EndReached?.Invoke(this, EventArgs.Empty);
         return (_libVlc, _mediaPlayer);
     }
 }
