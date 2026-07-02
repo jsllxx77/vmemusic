@@ -6,4 +6,7 @@ public sealed record Playlist(
     string? CoverArt,
     string? CoverArtUrl,
     int? SongCount,
-    int? DurationSeconds);
+    int? DurationSeconds)
+{
+    public string DurationText => DurationFormatter.FormatSeconds(DurationSeconds);
+}

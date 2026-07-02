@@ -7,4 +7,7 @@ public sealed record Song(
     string Album,
     string? CoverArt,
     string? CoverArtUrl,
-    int? DurationSeconds);
+    int? DurationSeconds)
+{
+    public string DurationText => DurationFormatter.FormatSeconds(DurationSeconds);
+}

@@ -68,6 +68,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private double playbackDuration;
 
     [ObservableProperty]
+    private bool canSeek;
+
+    [ObservableProperty]
     private string playbackPositionText = "0:00";
 
     [ObservableProperty]
@@ -145,6 +148,11 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         Playlists.Clear();
         PlaybackQueue.Clear();
         CurrentSong = null;
+        CanSeek = false;
+        PlaybackPosition = 0;
+        PlaybackDuration = 0;
+        PlaybackPositionText = "0:00";
+        PlaybackDurationText = "0:00";
         SelectedSong = null;
         SelectedAlbum = null;
         SelectedArtist = null;
@@ -447,6 +455,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         IsPlaying = false;
         PlaybackPosition = 0;
         PlaybackDuration = 0;
+        CanSeek = false;
         PlaybackPositionText = "0:00";
         PlaybackDurationText = "0:00";
         StatusMessage = "Playback stopped.";
@@ -525,6 +534,15 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         }
 
         PlaybackPositionText = FormatDuration(TimeSpan.FromSeconds(value));
+        if (CanSeek)
+        {
+            _playerService.Seek(TimeSpan.FromSeconds(value));
+        }
+    }
+
+    partial void OnPlaybackDurationChanged(double value)
+    {
+        CanSeek = value > 0;
     }
 
     private async Task PlaySongAsync(Song song)
@@ -553,6 +571,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         IsPlaying = true;
         PlaybackPosition = 0;
         PlaybackDuration = song.DurationSeconds ?? 0;
+        CanSeek = PlaybackDuration > 0;
         PlaybackPositionText = "0:00";
         PlaybackDurationText = FormatDuration(TimeSpan.FromSeconds(PlaybackDuration));
         StatusMessage = $"Playing {song.Title}.";
@@ -592,6 +611,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         {
             PlaybackDuration = duration.TotalSeconds;
             PlaybackDurationText = FormatDuration(duration);
+            CanSeek = true;
         }
 
         PlaybackPositionText = FormatDuration(position);
@@ -601,12 +621,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
     private static string FormatDuration(TimeSpan duration)
     {
-        if (duration.TotalHours >= 1)
-        {
-            return $"{(int)duration.TotalHours}:{duration.Minutes:00}:{duration.Seconds:00}";
-        }
-
-        return $"{(int)duration.TotalMinutes}:{duration.Seconds:00}";
+        return DurationFormatter.FormatSeconds((int)Math.Max(0, duration.TotalSeconds));
     }
 
     private async Task LoadSavedConnectionAsync()

@@ -38,6 +38,17 @@ public sealed class PlayerService : IDisposable
         _mediaPlayer?.Stop();
     }
 
+    public void Seek(TimeSpan position)
+    {
+        if (_mediaPlayer is null || _mediaPlayer.Length <= 0)
+        {
+            return;
+        }
+
+        var clamped = Math.Clamp(position.TotalMilliseconds, 0, _mediaPlayer.Length);
+        _mediaPlayer.Time = (long)clamped;
+    }
+
     public void Dispose()
     {
         _mediaPlayer?.Dispose();

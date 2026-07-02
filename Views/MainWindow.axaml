@@ -113,7 +113,7 @@
                                                    VerticalAlignment="Center"
                                                    TextTrimming="CharacterEllipsis" />
                                         <TextBlock Grid.Column="4"
-                                                   Text="{Binding DurationSeconds}"
+                                                   Text="{Binding DurationText}"
                                                    Foreground="#8E98A7"
                                                    VerticalAlignment="Center"
                                                    HorizontalAlignment="Right" />
@@ -216,7 +216,7 @@
                                                    Foreground="#B8C0CC"
                                                    VerticalAlignment="Center" />
                                         <TextBlock Grid.Column="3"
-                                                   Text="{Binding DurationSeconds}"
+                                                   Text="{Binding DurationText}"
                                                    Foreground="#8E98A7"
                                                    VerticalAlignment="Center"
                                                    HorizontalAlignment="Right" />
@@ -316,7 +316,7 @@
                         Minimum="0"
                         Maximum="{Binding PlaybackDuration}"
                         Value="{Binding PlaybackPosition}"
-                        IsEnabled="False"
+                        IsEnabled="{Binding CanSeek}"
                         VerticalAlignment="Center" />
                 <TextBlock Grid.Column="7"
                            Text="{Binding PlaybackPositionText}"
