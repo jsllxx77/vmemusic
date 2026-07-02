@@ -145,6 +145,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
     public bool HasSelectedSavedServer => SelectedSavedServer is not null;
 
+    public bool HasActiveServer => !string.IsNullOrWhiteSpace(ActiveServerUrl);
+
     public bool IsEditingSavedServer => !string.IsNullOrWhiteSpace(_editingServerId);
 
     public string ConnectionFormTitle => IsEditingSavedServer ? "Edit Server" : "New Server";
@@ -687,6 +689,11 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(HasSelectedSavedServer));
     }
 
+    partial void OnActiveServerUrlChanged(string value)
+    {
+        OnPropertyChanged(nameof(HasActiveServer));
+    }
+
     private void ReplaceSongs(IReadOnlyList<Song> songs)
     {
         SearchResults.Clear();
@@ -830,6 +837,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             if (connection is null)
             {
                 NewServer();
+                OpenSettings();
+                StatusMessage = "Add a Navidrome server in Settings to start browsing.";
                 return;
             }
 

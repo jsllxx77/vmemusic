@@ -40,10 +40,12 @@
                 </StackPanel>
                 <TextBox Grid.Column="1"
                          PlaceholderText="Search songs"
-                         Text="{Binding SearchQuery}" />
+                         Text="{Binding SearchQuery}"
+                         IsEnabled="{Binding HasActiveServer}" />
                 <Button Grid.Column="2"
                         Content="Search"
-                        Command="{Binding SearchCommand}" />
+                        Command="{Binding SearchCommand}"
+                        IsEnabled="{Binding HasActiveServer}" />
                 <Button Grid.Column="3"
                         Content="Settings"
                         Command="{Binding OpenSettingsCommand}" />
@@ -62,13 +64,17 @@
                                Foreground="#F3F5F7"
                                FontWeight="SemiBold" />
                     <Button Content="Search songs"
-                            Command="{Binding SearchCommand}" />
+                            Command="{Binding SearchCommand}"
+                            IsEnabled="{Binding HasActiveServer}" />
                     <Button Content="Newest albums"
-                            Command="{Binding LoadNewestAlbumsCommand}" />
+                            Command="{Binding LoadNewestAlbumsCommand}"
+                            IsEnabled="{Binding HasActiveServer}" />
                     <Button Content="Artists"
-                            Command="{Binding LoadArtistsCommand}" />
+                            Command="{Binding LoadArtistsCommand}"
+                            IsEnabled="{Binding HasActiveServer}" />
                     <Button Content="Playlists"
-                            Command="{Binding LoadPlaylistsCommand}" />
+                            Command="{Binding LoadPlaylistsCommand}"
+                            IsEnabled="{Binding HasActiveServer}" />
                     <Button Content="Settings"
                             Command="{Binding OpenSettingsCommand}" />
                 </StackPanel>
