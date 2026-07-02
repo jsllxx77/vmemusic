@@ -22,7 +22,7 @@
 
     <Grid RowDefinitions="Auto,*,Auto" Background="#101214">
         <Border Grid.Row="0" Background="#181B1F" Padding="18,14">
-            <Grid ColumnDefinitions="220,180,180,Auto,*,Auto" ColumnSpacing="10">
+            <Grid ColumnDefinitions="220,180,180,Auto,Auto,*,Auto" ColumnSpacing="10">
                 <TextBox Grid.Column="0"
                          PlaceholderText="Server URL"
                          Text="{Binding ServerUrl}" />
@@ -36,10 +36,13 @@
                 <Button Grid.Column="3"
                         Content="Test"
                         Command="{Binding TestConnectionCommand}" />
-                <TextBox Grid.Column="4"
+                <Button Grid.Column="4"
+                        Content="Clear"
+                        Command="{Binding ClearSavedConnectionCommand}" />
+                <TextBox Grid.Column="5"
                          PlaceholderText="Search songs"
                          Text="{Binding SearchQuery}" />
-                <Button Grid.Column="5"
+                <Button Grid.Column="6"
                         Content="Search"
                         Command="{Binding SearchCommand}" />
             </Grid>

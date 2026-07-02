@@ -21,3 +21,9 @@ dotnet run
 ```
 
 The first milestone focuses on connecting to a Navidrome server, searching songs, and playing streams.
+
+## Settings
+
+VmeMusic stores the last successful Navidrome connection in the user app data folder.
+On Windows, the password is protected with DPAPI for the current user.
+On non-Windows development environments, the password is stored with a `plain:` marker for local testing only.

@@ -10,6 +10,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 {
     private readonly NavidromeClient _navidromeClient;
     private readonly PlayerService _playerService;
+    private readonly AppSettingsService _settingsService;
 
     [ObservableProperty]
     private string serverUrl = "";
@@ -42,14 +43,19 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private bool isPlaying;
 
     public MainWindowViewModel()
-        : this(new NavidromeClient(), new PlayerService())
+        : this(new NavidromeClient(), new PlayerService(), new AppSettingsService())
     {
     }
 
-    public MainWindowViewModel(NavidromeClient navidromeClient, PlayerService playerService)
+    public MainWindowViewModel(
+        NavidromeClient navidromeClient,
+        PlayerService playerService,
+        AppSettingsService settingsService)
     {
         _navidromeClient = navidromeClient;
         _playerService = playerService;
+        _settingsService = settingsService;
+        _ = LoadSavedConnectionAsync();
     }
 
     public ObservableCollection<Song> SearchResults { get; } = [];
@@ -66,8 +72,23 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         {
             await _navidromeClient.PingAsync();
             IsConnected = true;
+            await _settingsService.SaveConnectionAsync(CreateConnection());
             StatusMessage = "Connected to Navidrome.";
         });
+    }
+
+    [RelayCommand]
+    private async Task ClearSavedConnectionAsync()
+    {
+        await _settingsService.ClearAsync();
+        ServerUrl = "";
+        Username = "";
+        Password = "";
+        IsConnected = false;
+        SearchResults.Clear();
+        CurrentSong = null;
+        SelectedSong = null;
+        StatusMessage = "Saved connection cleared.";
     }
 
     [RelayCommand]
@@ -154,8 +175,35 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             return false;
         }
 
-        _navidromeClient.Configure(new NavidromeConnection(ServerUrl, Username, Password));
+        _navidromeClient.Configure(CreateConnection());
         return true;
+    }
+
+    private NavidromeConnection CreateConnection()
+    {
+        return new NavidromeConnection(ServerUrl, Username, Password);
+    }
+
+    private async Task LoadSavedConnectionAsync()
+    {
+        try
+        {
+            var connection = await _settingsService.LoadConnectionAsync();
+            if (connection is null)
+            {
+                return;
+            }
+
+            ServerUrl = connection.BaseUrl;
+            Username = connection.Username;
+            Password = connection.Password;
+            _navidromeClient.Configure(connection);
+            StatusMessage = "Loaded saved Navidrome connection.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Could not load saved settings: {ex.Message}";
+        }
     }
 
     private async Task RunBusyAsync(Func<Task> action)
