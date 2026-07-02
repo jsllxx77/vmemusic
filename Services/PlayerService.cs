@@ -9,6 +9,14 @@ public sealed class PlayerService : IDisposable
 
     public bool IsPlaying => _mediaPlayer?.IsPlaying == true;
 
+    public bool HasMedia => _mediaPlayer?.Media is not null;
+
+    public bool IsMuted
+    {
+        get => _mediaPlayer?.Mute ?? false;
+        set => EnsurePlayer().MediaPlayer.Mute = value;
+    }
+
     public TimeSpan Position => TimeSpan.FromMilliseconds(Math.Max(0, _mediaPlayer?.Time ?? 0));
 
     public TimeSpan Duration => TimeSpan.FromMilliseconds(Math.Max(0, _mediaPlayer?.Length ?? 0));
@@ -30,7 +38,19 @@ public sealed class PlayerService : IDisposable
 
     public void Pause()
     {
-        _mediaPlayer?.Pause();
+        _mediaPlayer?.SetPause(true);
+    }
+
+    public void Resume()
+    {
+        var (_, mediaPlayer) = EnsurePlayer();
+        if (mediaPlayer.Media is null)
+        {
+            return;
+        }
+
+        mediaPlayer.SetPause(false);
+        mediaPlayer.Play();
     }
 
     public void Stop()
@@ -47,6 +67,11 @@ public sealed class PlayerService : IDisposable
 
         var clamped = Math.Clamp(position.TotalMilliseconds, 0, _mediaPlayer.Length);
         _mediaPlayer.Time = (long)clamped;
+    }
+
+    public void ToggleMute()
+    {
+        EnsurePlayer().MediaPlayer.ToggleMute();
     }
 
     public void Dispose()
