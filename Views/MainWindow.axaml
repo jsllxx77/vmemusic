@@ -1,130 +1,294 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:VmeMusic.ViewModels"
-        xmlns:models="using:VmeMusic.Models"
-        xmlns:converters="using:VmeMusic.Converters"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="760"
-        x:Class="VmeMusic.Views.MainWindow"
-        x:DataType="vm:MainWindowViewModel"
-        Icon="/Assets/avalonia-logo.ico"
-        Title="VmeMusic"
-        Width="1180"
-        Height="760"
-        MinWidth="940"
-        MinHeight="620">
+<suki:SukiWindow xmlns="https://github.com/avaloniaui"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:vm="using:VmeMusic.ViewModels"
+                 xmlns:models="using:VmeMusic.Models"
+                 xmlns:converters="using:VmeMusic.Converters"
+                 xmlns:suki="clr-namespace:SukiUI.Controls;assembly=SukiUI"
+                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                 mc:Ignorable="d"
+                 d:DesignWidth="1360"
+                 d:DesignHeight="860"
+                 x:Class="VmeMusic.Views.MainWindow"
+                 x:DataType="vm:MainWindowViewModel"
+                 Title="VmeMusic"
+                 Width="1360"
+                 Height="860"
+                 MinWidth="1120"
+                 MinHeight="720"
+                 BackgroundStyle="Gradient"
+                 CanPin="False"
+                 ShowTitlebarBackground="False">
 
     <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <vm:MainWindowViewModel/>
+        <vm:MainWindowViewModel />
     </Design.DataContext>
 
-    <Window.Resources>
+    <suki:SukiWindow.Resources>
         <converters:CoverArtConverter x:Key="CoverArtConverter" />
-    </Window.Resources>
+    </suki:SukiWindow.Resources>
 
-    <Grid RowDefinitions="Auto,*,Auto" Background="#101214">
-        <Border Grid.Row="0" Background="#181B1F" Padding="18,14">
-            <Grid ColumnDefinitions="*,320,Auto,Auto" ColumnSpacing="10">
+    <Grid RowDefinitions="Auto,*,Auto" Background="#0F1118">
+        <Border Grid.Row="0" Margin="20,14,20,12" Padding="18,14" Background="#14FFFFFF" CornerRadius="18">
+            <Grid ColumnDefinitions="280,*,Auto,Auto" ColumnSpacing="14">
                 <StackPanel Grid.Column="0" Spacing="2">
                     <TextBlock Text="{Binding ActiveServerName}"
-                               Foreground="#F3F5F7"
+                               FontSize="17"
                                FontWeight="SemiBold"
+                               Foreground="#FFF8F9FB"
                                TextTrimming="CharacterEllipsis" />
                     <TextBlock Text="{Binding ActiveServerUrl}"
-                               Foreground="#8E98A7"
+                               Foreground="#B8C2D2"
                                FontSize="12"
                                TextTrimming="CharacterEllipsis" />
                 </StackPanel>
-                <TextBox Grid.Column="1"
-                         PlaceholderText="Search songs"
-                         Text="{Binding SearchQuery}"
-                         IsEnabled="{Binding HasActiveServer}" />
+
+                <Border Grid.Column="1" Background="#1AFFFFFF" CornerRadius="16" Padding="14,8">
+                    <TextBox Background="Transparent"
+                             BorderThickness="0"
+                             PlaceholderText="Search songs"
+                             Text="{Binding SearchQuery}"
+                             IsEnabled="{Binding HasActiveServer}" />
+                </Border>
+
                 <Button Grid.Column="2"
                         Content="Search"
                         Command="{Binding SearchCommand}"
                         IsEnabled="{Binding HasActiveServer}" />
+
                 <Button Grid.Column="3"
                         Content="Settings"
                         Command="{Binding OpenSettingsCommand}" />
             </Grid>
         </Border>
 
-        <Grid Grid.Row="1" ColumnDefinitions="190,*,300">
-            <Border Grid.Column="0" Background="#15181B" Padding="16">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="VmeMusic"
-                               FontSize="24"
-                               FontWeight="SemiBold"
-                               Foreground="#F3F5F7" />
-                    <TextBlock Text="Search"
-                               Margin="0,24,0,0"
-                               Foreground="#F3F5F7"
-                               FontWeight="SemiBold" />
-                    <Button Content="Search songs"
-                            Command="{Binding SearchCommand}"
-                            IsEnabled="{Binding HasActiveServer}" />
-                    <Button Content="Newest albums"
-                            Command="{Binding LoadNewestAlbumsCommand}"
-                            IsEnabled="{Binding HasActiveServer}" />
-                    <Button Content="Artists"
-                            Command="{Binding LoadArtistsCommand}"
-                            IsEnabled="{Binding HasActiveServer}" />
-                    <Button Content="Playlists"
-                            Command="{Binding LoadPlaylistsCommand}"
-                            IsEnabled="{Binding HasActiveServer}" />
-                    <Button Content="Settings"
+        <Grid Grid.Row="1" Margin="20,0,20,16" ColumnDefinitions="220,*,320" ColumnSpacing="18">
+            <Border Grid.Column="0" Background="#14FFFFFF" CornerRadius="24" Padding="18,20">
+                <Grid RowDefinitions="Auto,Auto,*,Auto">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="VmeMusic"
+                                   FontSize="30"
+                                   FontWeight="Bold"
+                                   Foreground="#FFF7F8FB" />
+                        <TextBlock Text="Navidrome desktop player"
+                                   Foreground="#B8C2D2"
+                                   FontSize="12" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="1" Margin="0,26,0,0" Spacing="8">
+                        <Button Content="Home"
+                                Command="{Binding OpenHomeCommand}"
+                                IsEnabled="{Binding HasActiveServer}" />
+                        <Button Content="Search"
+                                Command="{Binding SearchCommand}"
+                                IsEnabled="{Binding HasActiveServer}" />
+                        <Button Content="Albums"
+                                Command="{Binding LoadNewestAlbumsCommand}"
+                                IsEnabled="{Binding HasActiveServer}" />
+                        <Button Content="Artists"
+                                Command="{Binding LoadArtistsCommand}"
+                                IsEnabled="{Binding HasActiveServer}" />
+                        <Button Content="Playlists"
+                                Command="{Binding LoadPlaylistsCommand}"
+                                IsEnabled="{Binding HasActiveServer}" />
+                    </StackPanel>
+
+                    <Border Grid.Row="2"
+                            Margin="0,18,0,18"
+                            Padding="16"
+                            Background="#12FFFFFF"
+                            CornerRadius="18"
+                            IsVisible="{Binding HasActiveServer}">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Quick Access"
+                                       Foreground="#FFF7F8FB"
+                                       FontWeight="SemiBold" />
+                            <Button Content="Now Playing"
+                                    Command="{Binding OpenNowPlayingDetailsCommand}" />
+                            <Button Content="Recent Sidebar"
+                                    Command="{Binding ShowRecentSidebarCommand}" />
+                            <Button Content="Queue Sidebar"
+                                    Command="{Binding ShowQueueSidebarCommand}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Button Grid.Row="3"
+                            Content="Settings"
+                            HorizontalAlignment="Stretch"
                             Command="{Binding OpenSettingsCommand}" />
-                </StackPanel>
+                </Grid>
             </Border>
 
-            <Border Grid.Column="1" Background="#101214" Padding="18">
+            <Border Grid.Column="1" Background="#11FFFFFF" CornerRadius="26" Padding="22">
                 <Grid RowDefinitions="Auto,*">
-                    <TextBlock Text="{Binding ContentTitle}"
-                               FontSize="20"
-                               FontWeight="SemiBold"
-                               Foreground="#F3F5F7"
-                               Margin="0,0,0,12" />
+                    <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,14">
+                        <StackPanel Spacing="3">
+                            <TextBlock Text="{Binding ContentTitle}"
+                                       FontSize="28"
+                                       FontWeight="Bold"
+                                       Foreground="#FFF7F8FB" />
+                            <TextBlock Text="{Binding StatusMessage}"
+                                       Foreground="#AEBACE"
+                                       FontSize="12"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
 
                     <Grid Grid.Row="1">
+                        <ScrollViewer IsVisible="{Binding IsHomeView}">
+                            <StackPanel Spacing="26">
+                                <Border Background="#16FFFFFF" CornerRadius="22" Padding="22">
+                                    <Grid ColumnDefinitions="2*,*" ColumnSpacing="20">
+                                        <StackPanel Spacing="10">
+                                            <TextBlock Text="Discover your library"
+                                                       FontSize="34"
+                                                       FontWeight="Bold"
+                                                       Foreground="#FFF8F9FB" />
+                                            <TextBlock Text="Use Home for quick access to recent albums and playlists, then jump into search or playback."
+                                                       Foreground="#C6CFDB"
+                                                       FontSize="14"
+                                                       TextWrapping="Wrap" />
+                                        </StackPanel>
+                                        <Border Grid.Column="1" Background="#22FF4D67" CornerRadius="20" Padding="18">
+                                            <StackPanel Spacing="8" VerticalAlignment="Center">
+                                                <TextBlock Text="Playlist"
+                                                           Foreground="#FFF8F9FB"
+                                                           FontWeight="SemiBold" />
+                                                <TextBlock Text="Bottom player opens song details. Right sidebar switches between queue and recent plays."
+                                                           Foreground="#FFE5EAF0"
+                                                           TextWrapping="Wrap" />
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+
+                                <StackPanel Spacing="12">
+                                    <TextBlock Text="Newest Albums"
+                                               FontSize="20"
+                                               FontWeight="SemiBold"
+                                               Foreground="#FFF7F8FB" />
+                                    <ListBox ItemsSource="{Binding HomeAlbums}"
+                                             SelectedItem="{Binding SelectedAlbum}"
+                                             DoubleTapped="AlbumsList_OnDoubleTapped"
+                                             Background="Transparent"
+                                             BorderThickness="0"
+                                             ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                             ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                        <ListBox.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel Orientation="Horizontal" Spacing="14" />
+                                            </ItemsPanelTemplate>
+                                        </ListBox.ItemsPanel>
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate x:DataType="models:Album">
+                                                <Border Width="188" Padding="12" Background="#16FFFFFF" CornerRadius="18" Margin="0,0,0,6">
+                                                    <StackPanel Spacing="10">
+                                                        <Border Height="164" Background="#1DFFFFFF" CornerRadius="14">
+                                                            <Image Source="{Binding CoverArtUrl, Converter={StaticResource CoverArtConverter}}"
+                                                                   Stretch="UniformToFill" />
+                                                        </Border>
+                                                        <TextBlock Text="{Binding Name}"
+                                                                   Foreground="#FFF7F8FB"
+                                                                   FontWeight="SemiBold"
+                                                                   TextWrapping="Wrap" />
+                                                        <TextBlock Text="{Binding Artist}"
+                                                                   Foreground="#AEBACE"
+                                                                   FontSize="12"
+                                                                   TextTrimming="CharacterEllipsis" />
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </StackPanel>
+
+                                <StackPanel Spacing="12">
+                                    <TextBlock Text="Playlists"
+                                               FontSize="20"
+                                               FontWeight="SemiBold"
+                                               Foreground="#FFF7F8FB" />
+                                    <ListBox ItemsSource="{Binding HomePlaylists}"
+                                             SelectedItem="{Binding SelectedPlaylist}"
+                                             DoubleTapped="PlaylistsList_OnDoubleTapped"
+                                             Background="Transparent"
+                                             BorderThickness="0"
+                                             ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                             ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                        <ListBox.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel Orientation="Horizontal" />
+                                            </ItemsPanelTemplate>
+                                        </ListBox.ItemsPanel>
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate x:DataType="models:Playlist">
+                                                <Border Width="220" Margin="0,0,14,14" Padding="12" Background="#16FFFFFF" CornerRadius="18">
+                                                    <Grid ColumnDefinitions="74,*" ColumnSpacing="12">
+                                                        <Border Width="74" Height="74" Background="#1DFFFFFF" CornerRadius="14">
+                                                            <Image Source="{Binding CoverArtUrl, Converter={StaticResource CoverArtConverter}}"
+                                                                   Stretch="UniformToFill" />
+                                                        </Border>
+                                                        <StackPanel Grid.Column="1" Spacing="6" VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding Name}"
+                                                                       Foreground="#FFF7F8FB"
+                                                                       FontWeight="SemiBold"
+                                                                       TextWrapping="Wrap" />
+                                                            <TextBlock Text="{Binding SongCount, StringFormat='{}{0} songs'}"
+                                                                       Foreground="#AEBACE"
+                                                                       FontSize="12" />
+                                                            <TextBlock Text="{Binding DurationText}"
+                                                                       Foreground="#8D98AA"
+                                                                       FontSize="12" />
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </StackPanel>
+                            </StackPanel>
+                        </ScrollViewer>
+
                         <ListBox ItemsSource="{Binding SearchResults}"
                                  SelectedItem="{Binding SelectedSong}"
                                  DoubleTapped="SongsList_OnDoubleTapped"
+                                 Background="Transparent"
+                                 BorderThickness="0"
                                  IsVisible="{Binding IsSongsView}">
                             <ListBox.ItemTemplate>
                                 <DataTemplate x:DataType="models:Song">
-                                    <Grid ColumnDefinitions="56,*,170,170,70" Margin="0,6">
-                                        <Border Grid.Column="0"
-                                                Width="42"
-                                                Height="42"
-                                                Background="#242A30"
-                                                CornerRadius="4">
-                                            <Image Source="{Binding CoverArtUrl, Converter={StaticResource CoverArtConverter}}"
-                                                   Stretch="UniformToFill" />
-                                        </Border>
-                                        <TextBlock Grid.Column="1"
-                                                   Text="{Binding Title}"
-                                                   Foreground="#F3F5F7"
-                                                   VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Grid.Column="2"
-                                                   Text="{Binding Artist}"
-                                                   Foreground="#B8C0CC"
-                                                   VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Grid.Column="3"
-                                                   Text="{Binding Album}"
-                                                   Foreground="#8E98A7"
-                                                   VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Grid.Column="4"
-                                                   Text="{Binding DurationText}"
-                                                   Foreground="#8E98A7"
-                                                   VerticalAlignment="Center"
-                                                   HorizontalAlignment="Right" />
-                                    </Grid>
+                                    <Border Padding="12" Margin="0,0,0,10" Background="#16FFFFFF" CornerRadius="16">
+                                        <Grid ColumnDefinitions="58,*,180,180,70" ColumnSpacing="12">
+                                            <Border Grid.Column="0" Width="48" Height="48" Background="#1DFFFFFF" CornerRadius="12">
+                                                <Image Source="{Binding CoverArtUrl, Converter={StaticResource CoverArtConverter}}"
+                                                       Stretch="UniformToFill" />
+                                            </Border>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Title}"
+                                                           Foreground="#FFF7F8FB"
+                                                           FontWeight="SemiBold"
+                                                           TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding Artist}"
+                                                           Foreground="#AEBACE"
+                                                           FontSize="12"
+                                                           TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="2"
+                                                       Text="{Binding Album}"
+                                                       Foreground="#AEBACE"
+                                                       VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Grid.Column="3"
+                                                       Text="{Binding Artist}"
+                                                       Foreground="#8D98AA"
+                                                       VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Grid.Column="4"
+                                                       Text="{Binding DurationText}"
+                                                       Foreground="#FFF7F8FB"
+                                                       VerticalAlignment="Center"
+                                                       HorizontalAlignment="Right" />
+                                        </Grid>
+                                    </Border>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
@@ -132,38 +296,42 @@
                         <ListBox ItemsSource="{Binding Albums}"
                                  SelectedItem="{Binding SelectedAlbum}"
                                  DoubleTapped="AlbumsList_OnDoubleTapped"
+                                 Background="Transparent"
+                                 BorderThickness="0"
                                  IsVisible="{Binding IsAlbumsView}">
                             <ListBox.ItemTemplate>
                                 <DataTemplate x:DataType="models:Album">
-                                    <Grid ColumnDefinitions="64,*,180,70,70" Margin="0,7">
-                                        <Border Grid.Column="0"
-                                                Width="48"
-                                                Height="48"
-                                                Background="#242A30"
-                                                CornerRadius="4">
-                                            <Image Source="{Binding CoverArtUrl, Converter={StaticResource CoverArtConverter}}"
-                                                   Stretch="UniformToFill" />
-                                        </Border>
-                                        <TextBlock Grid.Column="1"
-                                                   Text="{Binding Name}"
-                                                   Foreground="#F3F5F7"
-                                                   VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Grid.Column="2"
-                                                   Text="{Binding Artist}"
-                                                   Foreground="#B8C0CC"
-                                                   VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Grid.Column="3"
-                                                   Text="{Binding Year}"
-                                                   Foreground="#8E98A7"
-                                                   VerticalAlignment="Center" />
-                                        <TextBlock Grid.Column="4"
-                                                   Text="{Binding SongCount}"
-                                                   Foreground="#8E98A7"
-                                                   VerticalAlignment="Center"
-                                                   HorizontalAlignment="Right" />
-                                    </Grid>
+                                    <Border Padding="12" Margin="0,0,0,10" Background="#16FFFFFF" CornerRadius="16">
+                                        <Grid ColumnDefinitions="64,*,180,80,80" ColumnSpacing="12">
+                                            <Border Grid.Column="0" Width="52" Height="52" Background="#1DFFFFFF" CornerRadius="14">
+                                                <Image Source="{Binding CoverArtUrl, Converter={StaticResource CoverArtConverter}}"
+                                                       Stretch="UniformToFill" />
+                                            </Border>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}"
+                                                           Foreground="#FFF7F8FB"
+                                                           FontWeight="SemiBold"
+                                                           TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding Artist}"
+                                                           Foreground="#AEBACE"
+                                                           FontSize="12"
+                                                           TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="2"
+                                                       Text="{Binding Artist}"
+                                                       Foreground="#AEBACE"
+                                                       VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="3"
+                                                       Text="{Binding Year}"
+                                                       Foreground="#8D98AA"
+                                                       VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="4"
+                                                       Text="{Binding SongCount}"
+                                                       Foreground="#FFF7F8FB"
+                                                       VerticalAlignment="Center"
+                                                       HorizontalAlignment="Right" />
+                                        </Grid>
+                                    </Border>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
@@ -171,29 +339,33 @@
                         <ListBox ItemsSource="{Binding Artists}"
                                  SelectedItem="{Binding SelectedArtist}"
                                  DoubleTapped="ArtistsList_OnDoubleTapped"
+                                 Background="Transparent"
+                                 BorderThickness="0"
                                  IsVisible="{Binding IsArtistsView}">
                             <ListBox.ItemTemplate>
                                 <DataTemplate x:DataType="models:Artist">
-                                    <Grid ColumnDefinitions="64,*,100" Margin="0,7">
-                                        <Border Grid.Column="0"
-                                                Width="48"
-                                                Height="48"
-                                                Background="#242A30"
-                                                CornerRadius="24">
-                                            <Image Source="{Binding CoverArtUrl, Converter={StaticResource CoverArtConverter}}"
-                                                   Stretch="UniformToFill" />
-                                        </Border>
-                                        <TextBlock Grid.Column="1"
-                                                   Text="{Binding Name}"
-                                                   Foreground="#F3F5F7"
-                                                   VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Grid.Column="2"
-                                                   Text="{Binding AlbumCount}"
-                                                   Foreground="#8E98A7"
-                                                   VerticalAlignment="Center"
-                                                   HorizontalAlignment="Right" />
-                                    </Grid>
+                                    <Border Padding="12" Margin="0,0,0,10" Background="#16FFFFFF" CornerRadius="16">
+                                        <Grid ColumnDefinitions="64,*,100" ColumnSpacing="12">
+                                            <Border Grid.Column="0" Width="52" Height="52" Background="#1DFFFFFF" CornerRadius="26">
+                                                <Image Source="{Binding CoverArtUrl, Converter={StaticResource CoverArtConverter}}"
+                                                       Stretch="UniformToFill" />
+                                            </Border>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}"
+                                                           Foreground="#FFF7F8FB"
+                                                           FontWeight="SemiBold"
+                                                           TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="Artist"
+                                                           Foreground="#AEBACE"
+                                                           FontSize="12" />
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="2"
+                                                       Text="{Binding AlbumCount}"
+                                                       Foreground="#FFF7F8FB"
+                                                       VerticalAlignment="Center"
+                                                       HorizontalAlignment="Right" />
+                                        </Grid>
+                                    </Border>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
@@ -201,189 +373,187 @@
                         <ListBox ItemsSource="{Binding Playlists}"
                                  SelectedItem="{Binding SelectedPlaylist}"
                                  DoubleTapped="PlaylistsList_OnDoubleTapped"
+                                 Background="Transparent"
+                                 BorderThickness="0"
                                  IsVisible="{Binding IsPlaylistsView}">
                             <ListBox.ItemTemplate>
                                 <DataTemplate x:DataType="models:Playlist">
-                                    <Grid ColumnDefinitions="64,*,100,100" Margin="0,7">
-                                        <Border Grid.Column="0"
-                                                Width="48"
-                                                Height="48"
-                                                Background="#242A30"
-                                                CornerRadius="4">
-                                            <Image Source="{Binding CoverArtUrl, Converter={StaticResource CoverArtConverter}}"
-                                                   Stretch="UniformToFill" />
-                                        </Border>
-                                        <TextBlock Grid.Column="1"
-                                                   Text="{Binding Name}"
-                                                   Foreground="#F3F5F7"
-                                                   VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Grid.Column="2"
-                                                   Text="{Binding SongCount}"
-                                                   Foreground="#B8C0CC"
-                                                   VerticalAlignment="Center" />
-                                        <TextBlock Grid.Column="3"
-                                                   Text="{Binding DurationText}"
-                                                   Foreground="#8E98A7"
-                                                   VerticalAlignment="Center"
-                                                   HorizontalAlignment="Right" />
-                                    </Grid>
+                                    <Border Padding="12" Margin="0,0,0,10" Background="#16FFFFFF" CornerRadius="16">
+                                        <Grid ColumnDefinitions="64,*,110,110" ColumnSpacing="12">
+                                            <Border Grid.Column="0" Width="52" Height="52" Background="#1DFFFFFF" CornerRadius="14">
+                                                <Image Source="{Binding CoverArtUrl, Converter={StaticResource CoverArtConverter}}"
+                                                       Stretch="UniformToFill" />
+                                            </Border>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}"
+                                                           Foreground="#FFF7F8FB"
+                                                           FontWeight="SemiBold"
+                                                           TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="Playlist"
+                                                           Foreground="#AEBACE"
+                                                           FontSize="12" />
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="2"
+                                                       Text="{Binding SongCount, StringFormat='{}{0} songs'}"
+                                                       Foreground="#AEBACE"
+                                                       VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="3"
+                                                       Text="{Binding DurationText}"
+                                                       Foreground="#FFF7F8FB"
+                                                       VerticalAlignment="Center"
+                                                       HorizontalAlignment="Right" />
+                                        </Grid>
+                                    </Border>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
 
-                        <Grid IsVisible="{Binding IsSettingsView}"
-                              RowDefinitions="Auto,Auto,Auto,Auto,*"
-                              RowSpacing="14">
-                            <Border Background="#15181B" Padding="14" CornerRadius="6">
-                                <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="12">
-                                    <TextBlock Text="{Binding ConnectionFormTitle}"
-                                               Foreground="#F3F5F7"
-                                               FontWeight="SemiBold" />
-                                    <Grid Grid.Row="1"
-                                          ColumnDefinitions="180,*,160,160"
-                                          ColumnSpacing="10"
-                                          RowDefinitions="Auto,Auto">
-                                        <TextBox Grid.Column="0"
-                                                 Grid.Row="0"
-                                                 PlaceholderText="Profile name"
-                                                 Text="{Binding ServerProfileName}" />
-                                        <TextBox Grid.Column="1"
-                                                 Grid.Row="0"
-                                                 PlaceholderText="Server URL"
-                                                 Text="{Binding ServerUrl}" />
-                                        <TextBox Grid.Column="2"
-                                                 Grid.Row="0"
-                                                 PlaceholderText="Username"
-                                                 Text="{Binding Username}" />
-                                        <TextBox Grid.Column="3"
-                                                 Grid.Row="0"
-                                                 PlaceholderText="Password"
-                                                 PasswordChar="*"
-                                                 Text="{Binding Password}" />
-                                        <TextBlock Grid.Column="0"
-                                                   Grid.Row="1"
-                                                   Grid.ColumnSpan="4"
-                                                   Text="Use Test before Save if you want to verify the server first."
-                                                   Foreground="#8E98A7"
-                                                   FontSize="12" />
-                                    </Grid>
-                                    <StackPanel Grid.Row="2"
-                                                Orientation="Horizontal"
-                                                Spacing="8">
-                                        <Button Content="New"
-                                                Command="{Binding NewServerCommand}" />
-                                        <Button Content="Edit"
-                                                Command="{Binding EditSelectedServerCommand}"
-                                                IsEnabled="{Binding HasSelectedSavedServer}" />
-                                        <Button Content="Cancel"
-                                                Command="{Binding CancelServerEditCommand}" />
-                                        <Button Content="{Binding SaveServerButtonText}"
-                                                Command="{Binding SaveCurrentServerCommand}" />
-                                        <Button Content="Test Connection"
-                                                Command="{Binding TestConnectionCommand}" />
-                                        <Button Content="Clear All Saved Data"
-                                                Command="{Binding ClearSavedConnectionCommand}" />
-                                    </StackPanel>
-                                </Grid>
-                            </Border>
-
-                            <TextBlock Grid.Row="1"
-                                       Text="Cache"
-                                       FontSize="16"
-                                       FontWeight="SemiBold"
-                                       Foreground="#F3F5F7" />
-
-                            <Border Grid.Row="2" Background="#15181B" Padding="14" CornerRadius="6">
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <StackPanel Spacing="4">
-                                        <TextBlock Text="Cover Art Cache"
-                                                   Foreground="#F3F5F7"
-                                                   FontWeight="SemiBold" />
-                                        <TextBlock Text="{Binding CoverArtCacheDirectory}"
-                                                   Foreground="#B8C0CC"
+                        <Grid IsVisible="{Binding IsNowPlayingView}" ColumnDefinitions="340,*" ColumnSpacing="28">
+                            <Border Background="#16FFFFFF" CornerRadius="24" Padding="22">
+                                <StackPanel Spacing="18">
+                                    <Border Height="296" Background="#1DFFFFFF" CornerRadius="22">
+                                        <Image Source="{Binding CurrentSong.CoverArtUrl, Converter={StaticResource CoverArtConverter}}"
+                                               Stretch="UniformToFill" />
+                                    </Border>
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="{Binding CurrentSong.Title, FallbackValue=Nothing playing}"
+                                                   Foreground="#FFF7F8FB"
+                                                   FontSize="24"
+                                                   FontWeight="Bold"
+                                                   TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding CurrentSongSubtitle}"
+                                                   Foreground="#AEBACE"
                                                    TextWrapping="Wrap" />
                                     </StackPanel>
-                                    <Button Grid.Column="1"
-                                            Content="Clear Cache"
-                                            Command="{Binding ClearCoverArtCacheCommand}"
-                                            VerticalAlignment="Top" />
-                                </Grid>
+                                </StackPanel>
                             </Border>
-
-                            <TextBlock Grid.Row="3"
-                                       Text="Saved Servers"
-                                       FontSize="16"
-                                       FontWeight="SemiBold"
-                                       Foreground="#F3F5F7" />
-
-                            <Grid Grid.Row="4"
-                                  ColumnDefinitions="*,Auto,Auto"
-                                  ColumnSpacing="8">
-                                <ListBox ItemsSource="{Binding SavedServers}"
-                                         SelectedItem="{Binding SelectedSavedServer}">
-                                    <ListBox.ItemTemplate>
-                                        <DataTemplate x:DataType="models:SavedServerProfile">
-                                            <StackPanel Margin="0,6">
-                                                <TextBlock Text="{Binding DisplayName}"
-                                                           Foreground="#F3F5F7" />
-                                                <TextBlock Text="{Binding ServerUrl}"
-                                                           Foreground="#8E98A7"
-                                                           FontSize="12"
-                                                           TextTrimming="CharacterEllipsis" />
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </ListBox.ItemTemplate>
-                                </ListBox>
-                                <Button Grid.Column="1"
-                                        Content="Use"
-                                        Command="{Binding UseSelectedServerCommand}"
-                                        IsEnabled="{Binding HasSelectedSavedServer}"
-                                        VerticalAlignment="Top" />
-                                <Button Grid.Column="2"
-                                        Content="Remove"
-                                        Command="{Binding RemoveSelectedServerCommand}"
-                                        IsEnabled="{Binding HasSelectedSavedServer}"
-                                        VerticalAlignment="Top" />
-                            </Grid>
+                            <Border Grid.Column="1" Background="#14FFFFFF" CornerRadius="24" Padding="22">
+                                <ScrollViewer>
+                                    <TextBlock Text="{Binding CurrentSongLyrics}"
+                                               Foreground="#DCE3ED"
+                                               FontSize="16"
+                                               LineHeight="30"
+                                               TextWrapping="Wrap" />
+                                </ScrollViewer>
+                            </Border>
                         </Grid>
+
+                        <ScrollViewer IsVisible="{Binding IsSettingsView}">
+                            <StackPanel Spacing="18">
+                                <Border Background="#16FFFFFF" CornerRadius="22" Padding="18">
+                                    <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="14">
+                                        <TextBlock Text="{Binding ConnectionFormTitle}"
+                                                   Foreground="#FFF7F8FB"
+                                                   FontWeight="Bold"
+                                                   FontSize="20" />
+                                        <Grid Grid.Row="1"
+                                              ColumnDefinitions="180,*,160,160"
+                                              ColumnSpacing="12"
+                                              RowDefinitions="Auto,Auto">
+                                            <TextBox Grid.Column="0" Grid.Row="0" PlaceholderText="Profile name" Text="{Binding ServerProfileName}" />
+                                            <TextBox Grid.Column="1" Grid.Row="0" PlaceholderText="Server URL" Text="{Binding ServerUrl}" />
+                                            <TextBox Grid.Column="2" Grid.Row="0" PlaceholderText="Username" Text="{Binding Username}" />
+                                            <TextBox Grid.Column="3" Grid.Row="0" PlaceholderText="Password" PasswordChar="*" Text="{Binding Password}" />
+                                            <TextBlock Grid.Row="1" Grid.ColumnSpan="4"
+                                                       Text="Use Test Connection before Save if you want to verify the server first."
+                                                       Foreground="#AEBACE"
+                                                       FontSize="12" />
+                                        </Grid>
+                                        <WrapPanel Grid.Row="2" Orientation="Horizontal">
+                                            <Button Content="New" Command="{Binding NewServerCommand}" Margin="0,0,8,8" />
+                                            <Button Content="Edit" Command="{Binding EditSelectedServerCommand}" IsEnabled="{Binding HasSelectedSavedServer}" Margin="0,0,8,8" />
+                                            <Button Content="Cancel" Command="{Binding CancelServerEditCommand}" Margin="0,0,8,8" />
+                                            <Button Content="{Binding SaveServerButtonText}" Command="{Binding SaveCurrentServerCommand}" Margin="0,0,8,8" />
+                                            <Button Content="Test Connection" Command="{Binding TestConnectionCommand}" Margin="0,0,8,8" />
+                                            <Button Content="Clear All Saved Data" Command="{Binding ClearSavedConnectionCommand}" Margin="0,0,8,8" />
+                                        </WrapPanel>
+                                    </Grid>
+                                </Border>
+
+                                <Border Background="#16FFFFFF" CornerRadius="22" Padding="18">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Spacing="6">
+                                            <TextBlock Text="Cover Art Cache"
+                                                       Foreground="#FFF7F8FB"
+                                                       FontWeight="Bold"
+                                                       FontSize="18" />
+                                            <TextBlock Text="{Binding CoverArtCacheDirectory}"
+                                                       Foreground="#AEBACE"
+                                                       TextWrapping="Wrap" />
+                                        </StackPanel>
+                                        <Button Grid.Column="1"
+                                                Content="Clear Cache"
+                                                Command="{Binding ClearCoverArtCacheCommand}"
+                                                VerticalAlignment="Top" />
+                                    </Grid>
+                                </Border>
+
+                                <Border Background="#16FFFFFF" CornerRadius="22" Padding="18">
+                                    <Grid RowDefinitions="Auto,*" RowSpacing="12">
+                                        <TextBlock Text="Saved Servers"
+                                                   Foreground="#FFF7F8FB"
+                                                   FontWeight="Bold"
+                                                   FontSize="18" />
+                                        <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                            <ListBox ItemsSource="{Binding SavedServers}"
+                                                     SelectedItem="{Binding SelectedSavedServer}"
+                                                     Background="Transparent"
+                                                     BorderThickness="0">
+                                                <ListBox.ItemTemplate>
+                                                    <DataTemplate x:DataType="models:SavedServerProfile">
+                                                        <Border Padding="12" Margin="0,0,0,8" Background="#12FFFFFF" CornerRadius="14">
+                                                            <StackPanel Spacing="4">
+                                                                <TextBlock Text="{Binding DisplayName}"
+                                                                           Foreground="#FFF7F8FB"
+                                                                           FontWeight="SemiBold" />
+                                                                <TextBlock Text="{Binding ServerUrl}"
+                                                                           Foreground="#AEBACE"
+                                                                           FontSize="12"
+                                                                           TextTrimming="CharacterEllipsis" />
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ListBox.ItemTemplate>
+                                            </ListBox>
+                                            <Button Grid.Column="1"
+                                                    Content="Use"
+                                                    Command="{Binding UseSelectedServerCommand}"
+                                                    IsEnabled="{Binding HasSelectedSavedServer}"
+                                                    VerticalAlignment="Top" />
+                                            <Button Grid.Column="2"
+                                                    Content="Remove"
+                                                    Command="{Binding RemoveSelectedServerCommand}"
+                                                    IsEnabled="{Binding HasSelectedSavedServer}"
+                                                    VerticalAlignment="Top" />
+                                        </Grid>
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </ScrollViewer>
                     </Grid>
                 </Grid>
             </Border>
 
-            <Border Grid.Column="2" Background="#15181B" Padding="18">
-                <Grid RowDefinitions="Auto,Auto,Auto,196,Auto,*">
-                    <TextBlock Text="Now Playing"
-                               FontSize="18"
-                               FontWeight="SemiBold"
-                               Foreground="#F3F5F7" />
-                    <TextBlock Grid.Row="1"
-                               Text="{Binding CurrentSong.Title, FallbackValue=Nothing playing}"
-                               Foreground="#F3F5F7"
-                               FontSize="16"
-                               Margin="0,18,0,0"
-                               TextWrapping="Wrap" />
-                    <TextBlock Grid.Row="2"
-                               Text="{Binding CurrentSong.Artist}"
-                               Foreground="#9CA3AF"
-                               Margin="0,4,0,0"
-                               TextWrapping="Wrap" />
-                    <Border Grid.Row="3"
-                            Width="180"
-                            Height="180"
-                            HorizontalAlignment="Left"
-                            Background="#242A30"
-                            CornerRadius="6"
-                            Margin="0,20,0,8">
-                        <Image Source="{Binding CurrentSong.CoverArtUrl, Converter={StaticResource CoverArtConverter}}"
-                               Stretch="UniformToFill" />
-                    </Border>
-                    <Grid Grid.Row="4" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6" Margin="0,4,0,10">
-                        <TextBlock Grid.Column="0"
-                                   Text="Queue"
-                                   FontSize="16"
-                                   FontWeight="SemiBold"
-                                   Foreground="#F3F5F7"
+            <Border Grid.Column="2" Background="#12FFFFFF" CornerRadius="24" Padding="18">
+                <Grid RowDefinitions="Auto,Auto,*" RowSpacing="14">
+                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                        <TextBlock Text="{Binding SidebarTitle}"
+                                   Foreground="#FFF7F8FB"
+                                   FontSize="18"
+                                   FontWeight="Bold"
+                                   VerticalAlignment="Center" />
+                        <Button Grid.Column="1"
+                                Content="Queue"
+                                Command="{Binding ShowQueueSidebarCommand}" />
+                        <Button Grid.Column="2"
+                                Content="Recent"
+                                Command="{Binding ShowRecentSidebarCommand}" />
+                    </Grid>
+
+                    <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" IsVisible="{Binding IsQueueSidebar}">
+                        <TextBlock Text="Manage your play queue"
+                                   Foreground="#AEBACE"
+                                   FontSize="12"
                                    VerticalAlignment="Center" />
                         <Button Grid.Column="1"
                                 Content="Remove"
@@ -392,20 +562,65 @@
                                 Content="Clear"
                                 Command="{Binding ClearQueueCommand}" />
                     </Grid>
-                    <ListBox Grid.Row="5"
+
+                    <ListBox Grid.Row="2"
                              ItemsSource="{Binding PlaybackQueue}"
-                             SelectedItem="{Binding SelectedSong}">
+                             SelectedItem="{Binding SelectedSong}"
+                             DoubleTapped="SongsList_OnDoubleTapped"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             IsVisible="{Binding IsQueueSidebar}">
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="models:Song">
-                                <StackPanel Margin="0,5">
-                                    <TextBlock Text="{Binding Title}"
-                                               Foreground="#F3F5F7"
-                                               TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Text="{Binding Artist}"
-                                               Foreground="#8E98A7"
-                                               FontSize="12"
-                                               TextTrimming="CharacterEllipsis" />
-                                </StackPanel>
+                                <Border Padding="10" Margin="0,0,0,8" Background="#14FFFFFF" CornerRadius="14">
+                                    <Grid ColumnDefinitions="48,*" ColumnSpacing="12">
+                                        <Border Width="48" Height="48" Background="#1DFFFFFF" CornerRadius="12">
+                                            <Image Source="{Binding CoverArtUrl, Converter={StaticResource CoverArtConverter}}"
+                                                   Stretch="UniformToFill" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Title}"
+                                                       Foreground="#FFF7F8FB"
+                                                       FontWeight="SemiBold"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding Artist}"
+                                                       Foreground="#AEBACE"
+                                                       FontSize="12"
+                                                       TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <ListBox Grid.Row="2"
+                             ItemsSource="{Binding RecentlyPlayed}"
+                             SelectedItem="{Binding SelectedSong}"
+                             DoubleTapped="SongsList_OnDoubleTapped"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             IsVisible="{Binding IsRecentSidebar}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:Song">
+                                <Border Padding="10" Margin="0,0,0,8" Background="#14FFFFFF" CornerRadius="14">
+                                    <Grid ColumnDefinitions="48,*" ColumnSpacing="12">
+                                        <Border Width="48" Height="48" Background="#1DFFFFFF" CornerRadius="12">
+                                            <Image Source="{Binding CoverArtUrl, Converter={StaticResource CoverArtConverter}}"
+                                                   Stretch="UniformToFill" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Title}"
+                                                       Foreground="#FFF7F8FB"
+                                                       FontWeight="SemiBold"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding Artist}"
+                                                       Foreground="#AEBACE"
+                                                       FontSize="12"
+                                                       TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
@@ -413,49 +628,66 @@
             </Border>
         </Grid>
 
-        <Border Grid.Row="2" Background="#181B1F" Padding="18,12">
-            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,2*,Auto,Auto,120" ColumnSpacing="10">
-                <TextBlock Grid.Column="0"
-                           Text="{Binding StatusMessage}"
-                           Foreground="#B8C0CC"
-                           VerticalAlignment="Center"
-                           TextTrimming="CharacterEllipsis" />
-                <Button Grid.Column="1"
-                        Content="Prev"
-                        Command="{Binding PlayPreviousCommand}" />
-                <Button Grid.Column="2"
-                        Content="Play"
-                        Command="{Binding PlaySelectedCommand}" />
-                <Button Grid.Column="3"
-                        Content="Pause"
-                        Command="{Binding TogglePlaybackCommand}" />
-                <Button Grid.Column="4"
-                        Content="Stop"
-                        Command="{Binding StopCommand}" />
-                <Button Grid.Column="5"
-                        Content="Next"
-                        Command="{Binding PlayNextCommand}" />
-                <Slider Grid.Column="6"
-                        Minimum="0"
-                        Maximum="{Binding PlaybackDuration}"
-                        Value="{Binding PlaybackPosition}"
-                        IsEnabled="{Binding CanSeek}"
-                        VerticalAlignment="Center" />
-                <TextBlock Grid.Column="7"
-                           Text="{Binding PlaybackPositionText}"
-                           Foreground="#B8C0CC"
-                           VerticalAlignment="Center" />
-                <TextBlock Grid.Column="8"
-                           Text="{Binding PlaybackDurationText}"
-                           Foreground="#8E98A7"
-                           VerticalAlignment="Center" />
-                <Slider Grid.Column="9"
-                        Minimum="0"
-                        Maximum="100"
-                        Value="{Binding Volume}"
-                        VerticalAlignment="Center" />
+        <Border Grid.Row="2" Margin="20,0,20,20" Padding="18,14" Background="#18FFFFFF" CornerRadius="22">
+            <Grid ColumnDefinitions="280,*,280" ColumnSpacing="18">
+                <Button Grid.Column="0"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        HorizontalContentAlignment="Stretch"
+                        Command="{Binding OpenNowPlayingDetailsCommand}">
+                    <Grid ColumnDefinitions="62,*" ColumnSpacing="12">
+                        <Border Width="58" Height="58" Background="#1DFFFFFF" CornerRadius="16">
+                            <Image Source="{Binding CurrentSong.CoverArtUrl, Converter={StaticResource CoverArtConverter}}"
+                                   Stretch="UniformToFill" />
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+                            <TextBlock Text="{Binding CurrentSong.Title, FallbackValue=Nothing playing}"
+                                       Foreground="#FFF7F8FB"
+                                       FontWeight="SemiBold"
+                                       TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding CurrentSongSubtitle}"
+                                       Foreground="#AEBACE"
+                                       FontSize="12"
+                                       TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                    </Grid>
+                </Button>
+
+                <StackPanel Grid.Column="1" Spacing="10" VerticalAlignment="Center">
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                        <TextBlock Text="{Binding PlaybackPositionText}"
+                                   Foreground="#AEBACE"
+                                   VerticalAlignment="Center" />
+                        <Slider Grid.Column="1"
+                                Minimum="0"
+                                Maximum="{Binding PlaybackDuration}"
+                                Value="{Binding PlaybackPosition}"
+                                IsEnabled="{Binding CanSeek}"
+                                VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="2"
+                                   Text="{Binding PlaybackDurationText}"
+                                   Foreground="#AEBACE"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+
+                    <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto" HorizontalAlignment="Center" ColumnSpacing="12">
+                        <Button Grid.Column="0" Content="Prev" Command="{Binding PlayPreviousCommand}" />
+                        <Button Grid.Column="1" Content="Play" Command="{Binding PlaySelectedCommand}" />
+                        <Button Grid.Column="2" Content="Pause" Command="{Binding TogglePlaybackCommand}" />
+                        <Button Grid.Column="3" Content="Stop" Command="{Binding StopCommand}" />
+                        <Button Grid.Column="4" Content="Next" Command="{Binding PlayNextCommand}" />
+                    </Grid>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Spacing="8" VerticalAlignment="Center">
+                    <TextBlock Text="Volume"
+                               Foreground="#AEBACE"
+                               FontSize="12" />
+                    <Slider Minimum="0"
+                            Maximum="100"
+                            Value="{Binding Volume}" />
+                </StackPanel>
             </Grid>
         </Border>
     </Grid>
-
-</Window>
+</suki:SukiWindow>

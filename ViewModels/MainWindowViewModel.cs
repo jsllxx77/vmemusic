@@ -17,6 +17,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private readonly DispatcherTimer _positionTimer;
     private bool _isUpdatingPlayerPosition;
     private int _currentQueueIndex = -1;
+    private NavidromeConnection? _activeConnection;
     private string? _activeServerId;
     private string? _editingServerId;
 
@@ -63,10 +64,13 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private Song? currentSong;
 
     [ObservableProperty]
-    private LibraryViewKind currentView = LibraryViewKind.Songs;
+    private bool recentSidebarSelected;
 
     [ObservableProperty]
-    private string contentTitle = "Songs";
+    private LibraryViewKind currentView = LibraryViewKind.Home;
+
+    [ObservableProperty]
+    private string contentTitle = "Home";
 
     [ObservableProperty]
     private string statusMessage = "Configure your Navidrome server to start.";
@@ -129,9 +133,17 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
     public ObservableCollection<Playlist> Playlists { get; } = [];
 
+    public ObservableCollection<Album> HomeAlbums { get; } = [];
+
+    public ObservableCollection<Playlist> HomePlaylists { get; } = [];
+
+    public ObservableCollection<Song> RecentlyPlayed { get; } = [];
+
     public ObservableCollection<SavedServerProfile> SavedServers { get; } = [];
 
     public ObservableCollection<Song> PlaybackQueue { get; } = [];
+
+    public bool IsHomeView => CurrentView == LibraryViewKind.Home;
 
     public bool IsSongsView => CurrentView == LibraryViewKind.Songs;
 
@@ -143,9 +155,17 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
     public bool IsSettingsView => CurrentView == LibraryViewKind.Settings;
 
+    public bool IsNowPlayingView => CurrentView == LibraryViewKind.NowPlaying;
+
     public bool HasSelectedSavedServer => SelectedSavedServer is not null;
 
-    public bool HasActiveServer => !string.IsNullOrWhiteSpace(ActiveServerUrl);
+    public bool HasActiveServer => _activeConnection is not null;
+
+    public bool IsQueueSidebar => !RecentSidebarSelected;
+
+    public bool IsRecentSidebar => RecentSidebarSelected;
+
+    public string SidebarTitle => RecentSidebarSelected ? "Recently Played" : "Play Queue";
 
     public bool IsEditingSavedServer => !string.IsNullOrWhiteSpace(_editingServerId);
 
@@ -153,10 +173,26 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
     public string SaveServerButtonText => IsEditingSavedServer ? "Update Server" : "Save Server";
 
+    public string CurrentSongSubtitle => CurrentSong is null
+        ? "Select a song to start playback"
+        : $"{CurrentSong.Artist} · {CurrentSong.Album}";
+
+    public string CurrentSongLyrics => CurrentSong is null
+        ? "Lyrics and credits will appear here."
+        : string.Join(
+            "\n\n",
+            new[]
+            {
+                CurrentSong.Title,
+                $"{CurrentSong.Artist} · {CurrentSong.Album}",
+                "Lyrics sync is not connected yet.",
+                "This page is ready for lyrics, credits, and playback details."
+            });
+
     [RelayCommand]
     private async Task TestConnectionAsync()
     {
-        if (!ConfigureClient())
+        if (!ConfigureClientFromForm())
         {
             return;
         }
@@ -195,9 +231,13 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         SelectedPlaylist = null;
         SelectedSavedServer = null;
         SavedServers.Clear();
+        HomeAlbums.Clear();
+        HomePlaylists.Clear();
+        RecentlyPlayed.Clear();
         ActiveServerName = "No server selected";
         ActiveServerUrl = "";
         ServerProfileName = "";
+        SetActiveConnection(null);
         _activeServerId = null;
         _editingServerId = null;
         OnPropertyChanged(nameof(IsEditingSavedServer));
@@ -217,9 +257,53 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     }
 
     [RelayCommand]
+    private async Task OpenHomeAsync()
+    {
+        if (!EnsureActiveClient())
+        {
+            OpenSettings();
+            StatusMessage = "Add a Navidrome server in Settings to start browsing.";
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            await LoadHomeContentAsync();
+            CurrentView = LibraryViewKind.Home;
+            ContentTitle = "Home";
+            StatusMessage = "Loaded home content.";
+        });
+    }
+
+    [RelayCommand]
+    private void ShowQueueSidebar()
+    {
+        RecentSidebarSelected = false;
+    }
+
+    [RelayCommand]
+    private void ShowRecentSidebar()
+    {
+        RecentSidebarSelected = true;
+    }
+
+    [RelayCommand]
+    private void OpenNowPlayingDetails()
+    {
+        if (CurrentSong is null)
+        {
+            StatusMessage = "Start playback to open song details.";
+            return;
+        }
+
+        CurrentView = LibraryViewKind.NowPlaying;
+        ContentTitle = "Now Playing";
+    }
+
+    [RelayCommand]
     private async Task SaveCurrentServerAsync()
     {
-        if (!ConfigureClient())
+        if (!ConfigureClientFromForm())
         {
             return;
         }
@@ -294,7 +378,11 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             _activeServerId = SelectedSavedServer.Id;
             await LoadFormFromProfileAsync(SelectedSavedServer);
             SetActiveServerSummary(SelectedSavedServer.DisplayName, SelectedSavedServer.ServerUrl);
-            _navidromeClient.Configure(CreateConnection());
+            SetActiveConnection(CreateConnection());
+            _navidromeClient.Configure(_activeConnection!);
+            await LoadHomeContentAsync();
+            CurrentView = LibraryViewKind.Home;
+            ContentTitle = "Home";
             StatusMessage = $"Active server set to {SelectedSavedServer.DisplayName}.";
         });
     }
@@ -324,6 +412,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
                 {
                     ActiveServerName = "No server selected";
                     ActiveServerUrl = "";
+                    SetActiveConnection(null);
                 }
             }
 
@@ -345,7 +434,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private async Task LoadArtistsAsync()
     {
-        if (!ConfigureClient())
+        if (!EnsureActiveClient())
         {
             return;
         }
@@ -377,7 +466,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        if (!ConfigureClient())
+        if (!EnsureActiveClient())
         {
             return;
         }
@@ -404,7 +493,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private async Task SearchAsync()
     {
-        if (!ConfigureClient())
+        if (!EnsureActiveClient())
         {
             return;
         }
@@ -425,7 +514,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private async Task LoadNewestAlbumsAsync()
     {
-        if (!ConfigureClient())
+        if (!EnsureActiveClient())
         {
             return;
         }
@@ -457,7 +546,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        if (!ConfigureClient())
+        if (!EnsureActiveClient())
         {
             return;
         }
@@ -478,7 +567,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private async Task LoadPlaylistsAsync()
     {
-        if (!ConfigureClient())
+        if (!EnsureActiveClient())
         {
             return;
         }
@@ -510,7 +599,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        if (!ConfigureClient())
+        if (!EnsureActiveClient())
         {
             return;
         }
@@ -537,7 +626,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        if (!ConfigureClient())
+        if (!EnsureActiveClient())
         {
             return;
         }
@@ -656,7 +745,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         return _navidromeClient.GetCoverArtUrl(playlist.CoverArt);
     }
 
-    private bool ConfigureClient()
+    private bool ConfigureClientFromForm()
     {
         if (string.IsNullOrWhiteSpace(ServerUrl) ||
             string.IsNullOrWhiteSpace(Username) ||
@@ -670,6 +759,18 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         return true;
     }
 
+    private bool EnsureActiveClient()
+    {
+        if (_activeConnection is null)
+        {
+            StatusMessage = "Add or activate a Navidrome server in Settings first.";
+            return false;
+        }
+
+        _navidromeClient.Configure(_activeConnection);
+        return true;
+    }
+
     private NavidromeConnection CreateConnection()
     {
         return new NavidromeConnection(ServerUrl, Username, Password);
@@ -677,11 +778,13 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
     partial void OnCurrentViewChanged(LibraryViewKind value)
     {
+        OnPropertyChanged(nameof(IsHomeView));
         OnPropertyChanged(nameof(IsSongsView));
         OnPropertyChanged(nameof(IsAlbumsView));
         OnPropertyChanged(nameof(IsArtistsView));
         OnPropertyChanged(nameof(IsPlaylistsView));
         OnPropertyChanged(nameof(IsSettingsView));
+        OnPropertyChanged(nameof(IsNowPlayingView));
     }
 
     partial void OnSelectedSavedServerChanged(SavedServerProfile? value)
@@ -689,9 +792,17 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(HasSelectedSavedServer));
     }
 
-    partial void OnActiveServerUrlChanged(string value)
+    partial void OnCurrentSongChanged(Song? value)
     {
-        OnPropertyChanged(nameof(HasActiveServer));
+        OnPropertyChanged(nameof(CurrentSongSubtitle));
+        OnPropertyChanged(nameof(CurrentSongLyrics));
+    }
+
+    partial void OnRecentSidebarSelectedChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsQueueSidebar));
+        OnPropertyChanged(nameof(IsRecentSidebar));
+        OnPropertyChanged(nameof(SidebarTitle));
     }
 
     private void ReplaceSongs(IReadOnlyList<Song> songs)
@@ -738,7 +849,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
     private async Task PlaySongAsync(Song song)
     {
-        if (!ConfigureClient())
+        if (!EnsureActiveClient())
         {
             return;
         }
@@ -761,6 +872,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             _playerService.Volume = Volume;
             _playerService.PlayUrl(_navidromeClient.GetStreamUrl(song.Id));
             CurrentSong = song;
+            UpdateRecentlyPlayed(song);
             IsPlaying = true;
             PlaybackPosition = 0;
             PlaybackDuration = song.DurationSeconds ?? 0;
@@ -843,6 +955,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             }
 
             ApplyConnection(connection, SavedServers.FirstOrDefault(server => server.Id == settings.ActiveServerId));
+            await LoadHomeContentAsync();
+            CurrentView = LibraryViewKind.Home;
+            ContentTitle = "Home";
             StatusMessage = "Loaded saved Navidrome connection.";
         }
         catch (Exception ex)
@@ -886,6 +1001,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             SelectedSavedServer?.DisplayName ?? ServerProfileName,
             SelectedSavedServer?.ServerUrl ?? ServerUrl);
         _editingServerId = _activeServerId;
+        SetActiveConnection(CreateConnection());
         OnPropertyChanged(nameof(IsEditingSavedServer));
         OnPropertyChanged(nameof(ConnectionFormTitle));
         OnPropertyChanged(nameof(SaveServerButtonText));
@@ -914,6 +1030,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         _activeServerId = profile?.Id;
         _editingServerId = profile?.Id;
         SetActiveServerSummary(ServerProfileName, connection.BaseUrl);
+        SetActiveConnection(connection);
         OnPropertyChanged(nameof(IsEditingSavedServer));
         OnPropertyChanged(nameof(ConnectionFormTitle));
         OnPropertyChanged(nameof(SaveServerButtonText));
@@ -949,5 +1066,44 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
         ActiveServerName = string.IsNullOrWhiteSpace(name) ? "No server selected" : name;
         ActiveServerUrl = url;
+    }
+
+    private void SetActiveConnection(NavidromeConnection? connection)
+    {
+        _activeConnection = connection;
+        OnPropertyChanged(nameof(HasActiveServer));
+    }
+
+    private async Task LoadHomeContentAsync()
+    {
+        var albums = await _navidromeClient.GetNewestAlbumsAsync(size: 8);
+        var playlists = await _navidromeClient.GetPlaylistsAsync();
+
+        HomeAlbums.Clear();
+        foreach (var album in albums)
+        {
+            HomeAlbums.Add(album);
+        }
+
+        HomePlaylists.Clear();
+        foreach (var playlist in playlists.Take(8))
+        {
+            HomePlaylists.Add(playlist);
+        }
+    }
+
+    private void UpdateRecentlyPlayed(Song song)
+    {
+        var existing = RecentlyPlayed.FirstOrDefault(item => item.Id == song.Id);
+        if (existing is not null)
+        {
+            RecentlyPlayed.Remove(existing);
+        }
+
+        RecentlyPlayed.Insert(0, song);
+        while (RecentlyPlayed.Count > 20)
+        {
+            RecentlyPlayed.RemoveAt(RecentlyPlayed.Count - 1);
+        }
     }
 }
