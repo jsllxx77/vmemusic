@@ -34,7 +34,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private string serverProfileName = "";
 
     [ObservableProperty]
-    private string activeServerName = "No server selected";
+    private string activeServerName = "未选择服务器";
 
     [ObservableProperty]
     private string activeServerUrl = "";
@@ -70,10 +70,10 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private LibraryViewKind currentView = LibraryViewKind.Home;
 
     [ObservableProperty]
-    private string contentTitle = "Home";
+    private string contentTitle = "首页";
 
     [ObservableProperty]
-    private string statusMessage = "Configure your Navidrome server to start.";
+    private string statusMessage = "请在设置中添加 Navidrome 服务器。";
 
     [ObservableProperty]
     private bool isBusy;
@@ -165,28 +165,34 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
     public bool IsRecentSidebar => RecentSidebarSelected;
 
-    public string SidebarTitle => RecentSidebarSelected ? "Recently Played" : "Play Queue";
+    public string SidebarTitle => RecentSidebarSelected ? "最近播放" : "播放队列";
 
     public bool IsEditingSavedServer => !string.IsNullOrWhiteSpace(_editingServerId);
 
-    public string ConnectionFormTitle => IsEditingSavedServer ? "Edit Server" : "New Server";
+    public string ConnectionFormTitle => IsEditingSavedServer ? "编辑服务器" : "新建服务器";
 
-    public string SaveServerButtonText => IsEditingSavedServer ? "Update Server" : "Save Server";
+    public string ConnectionFormHint => IsEditingSavedServer
+        ? "正在编辑已保存的服务器，保存后会更新并启用该配置。"
+        : "正在新建服务器配置，填写完成后点击“保存并启用”。";
+
+    public string SaveServerButtonText => IsEditingSavedServer ? "更新并启用" : "保存并启用";
+
+    public string PlaybackToggleToolTip => IsPlaying ? "暂停" : "继续播放";
 
     public string CurrentSongSubtitle => CurrentSong is null
-        ? "Select a song to start playback"
+        ? "还没有播放歌曲"
         : $"{CurrentSong.Artist} · {CurrentSong.Album}";
 
     public string CurrentSongLyrics => CurrentSong is null
-        ? "Lyrics and credits will appear here."
+        ? "播放歌曲后，这里会显示歌词、专辑和播放信息。"
         : string.Join(
             "\n\n",
             new[]
             {
                 CurrentSong.Title,
                 $"{CurrentSong.Artist} · {CurrentSong.Album}",
-                "Lyrics sync is not connected yet.",
-                "This page is ready for lyrics, credits, and playback details."
+                "歌词接口尚未接入。",
+                "后续可以在这里展示歌词、制作信息和更完整的播放详情。"
             });
 
     [RelayCommand]
@@ -202,7 +208,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             await _navidromeClient.PingAsync();
             IsConnected = true;
             await SaveCurrentServerCoreAsync(true);
-            StatusMessage = "Connected to Navidrome.";
+            StatusMessage = "已连接到 Navidrome。";
         });
     }
 
@@ -234,7 +240,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         HomeAlbums.Clear();
         HomePlaylists.Clear();
         RecentlyPlayed.Clear();
-        ActiveServerName = "No server selected";
+        ActiveServerName = "未选择服务器";
         ActiveServerUrl = "";
         ServerProfileName = "";
         SetActiveConnection(null);
@@ -242,18 +248,19 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         _editingServerId = null;
         OnPropertyChanged(nameof(IsEditingSavedServer));
         OnPropertyChanged(nameof(ConnectionFormTitle));
+        OnPropertyChanged(nameof(ConnectionFormHint));
         OnPropertyChanged(nameof(SaveServerButtonText));
-        CurrentView = LibraryViewKind.Songs;
-        ContentTitle = "Songs";
-        StatusMessage = "Saved connection cleared.";
+        CurrentView = LibraryViewKind.Settings;
+        ContentTitle = "设置";
+        StatusMessage = "已清除保存的连接配置。";
     }
 
     [RelayCommand]
     private void OpenSettings()
     {
         CurrentView = LibraryViewKind.Settings;
-        ContentTitle = "Settings";
-        StatusMessage = "Manage saved servers and cache settings.";
+        ContentTitle = "设置";
+        StatusMessage = "管理服务器、连接信息和缓存。";
     }
 
     [RelayCommand]
@@ -261,8 +268,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
         if (!EnsureActiveClient())
         {
-            OpenSettings();
-            StatusMessage = "Add a Navidrome server in Settings to start browsing.";
+            CurrentView = LibraryViewKind.Home;
+            ContentTitle = "首页";
+            StatusMessage = "请先在设置中添加并启用 Navidrome 服务器。";
             return;
         }
 
@@ -270,8 +278,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         {
             await LoadHomeContentAsync();
             CurrentView = LibraryViewKind.Home;
-            ContentTitle = "Home";
-            StatusMessage = "Loaded home content.";
+            ContentTitle = "首页";
+            StatusMessage = "首页内容已加载。";
         });
     }
 
@@ -292,12 +300,12 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
         if (CurrentSong is null)
         {
-            StatusMessage = "Start playback to open song details.";
+            StatusMessage = "先播放一首歌，再打开歌曲详情。";
             return;
         }
 
         CurrentView = LibraryViewKind.NowPlaying;
-        ContentTitle = "Now Playing";
+        ContentTitle = "正在播放";
     }
 
     [RelayCommand]
@@ -311,7 +319,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         await RunBusyAsync(async () =>
         {
             await SaveCurrentServerCoreAsync(true);
-            StatusMessage = "Saved current server profile.";
+            StatusMessage = "已保存并启用服务器配置。";
         });
     }
 
@@ -323,10 +331,13 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         ServerUrl = "";
         Username = "";
         Password = "";
+        SelectedSavedServer = null;
+        ContentTitle = "设置 · 新建服务器";
         OnPropertyChanged(nameof(IsEditingSavedServer));
         OnPropertyChanged(nameof(ConnectionFormTitle));
+        OnPropertyChanged(nameof(ConnectionFormHint));
         OnPropertyChanged(nameof(SaveServerButtonText));
-        StatusMessage = "Creating a new server profile.";
+        StatusMessage = "已进入新建服务器模式，请填写连接信息后保存并启用。";
     }
 
     [RelayCommand]
@@ -334,14 +345,15 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
         if (SelectedSavedServer is null)
         {
-            StatusMessage = "Select a saved server first.";
+            StatusMessage = "请先选择一个已保存的服务器。";
             return;
         }
 
         await RunBusyAsync(async () =>
         {
             await LoadFormFromProfileAsync(SelectedSavedServer);
-            StatusMessage = $"Editing {SelectedSavedServer.DisplayName}.";
+            ContentTitle = "设置 · 编辑服务器";
+            StatusMessage = $"正在编辑 {SelectedSavedServer.DisplayName}。";
         });
     }
 
@@ -354,13 +366,15 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             await RunBusyAsync(async () =>
             {
                 await LoadFormFromProfileAsync(profile);
-                StatusMessage = "Reverted form to the active server.";
+                ContentTitle = "设置";
+                StatusMessage = "已恢复为当前启用的服务器配置。";
             });
             return;
         }
 
         NewServer();
-        StatusMessage = "Cleared the connection form.";
+        ContentTitle = "设置";
+        StatusMessage = "已清空连接表单。";
     }
 
     [RelayCommand]
@@ -368,7 +382,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
         if (SelectedSavedServer is null)
         {
-            StatusMessage = "Select a saved server first.";
+            StatusMessage = "请先选择一个已保存的服务器。";
             return;
         }
 
@@ -382,8 +396,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             _navidromeClient.Configure(_activeConnection!);
             await LoadHomeContentAsync();
             CurrentView = LibraryViewKind.Home;
-            ContentTitle = "Home";
-            StatusMessage = $"Active server set to {SelectedSavedServer.DisplayName}.";
+            ContentTitle = "首页";
+            StatusMessage = $"已启用服务器 {SelectedSavedServer.DisplayName}。";
         });
     }
 
@@ -392,7 +406,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
         if (SelectedSavedServer is null)
         {
-            StatusMessage = "Select a saved server first.";
+            StatusMessage = "请先选择一个已保存的服务器。";
             return;
         }
 
@@ -410,13 +424,13 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
                 }
                 else
                 {
-                    ActiveServerName = "No server selected";
+                    ActiveServerName = "未选择服务器";
                     ActiveServerUrl = "";
                     SetActiveConnection(null);
                 }
             }
 
-            StatusMessage = "Removed saved server.";
+            StatusMessage = "已删除服务器配置。";
         });
     }
 
@@ -427,7 +441,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         {
             _coverArtCacheService.Clear();
             await _settingsService.SaveCoverArtCacheDirectoryAsync(CoverArtCacheDirectory);
-            StatusMessage = "Cleared cover art cache.";
+            StatusMessage = "已清理封面缓存。";
         });
     }
 
@@ -442,7 +456,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         await RunBusyAsync(async () =>
         {
             CurrentView = LibraryViewKind.Artists;
-            ContentTitle = "Artists";
+            ContentTitle = "艺术家";
             Artists.Clear();
             var artists = await _navidromeClient.GetArtistsAsync();
             foreach (var artist in artists)
@@ -452,8 +466,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
             SelectedArtist = Artists.FirstOrDefault();
             StatusMessage = artists.Count == 0
-                ? "No artists found."
-                : $"Loaded {artists.Count} artists.";
+                ? "没有找到艺术家。"
+                : $"已加载 {artists.Count} 位艺术家。";
         });
     }
 
@@ -462,7 +476,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
         if (SelectedArtist is null)
         {
-            StatusMessage = "Select an artist first.";
+            StatusMessage = "请先选择一位艺术家。";
             return;
         }
 
@@ -485,8 +499,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
             SelectedAlbum = Albums.FirstOrDefault();
             StatusMessage = albums.Count == 0
-                ? "Artist has no albums."
-                : $"Loaded {albums.Count} albums from {artist.Name}.";
+                ? "这位艺术家没有专辑。"
+                : $"已加载 {artist.Name} 的 {albums.Count} 张专辑。";
         });
     }
 
@@ -501,13 +515,13 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         await RunBusyAsync(async () =>
         {
             CurrentView = LibraryViewKind.Songs;
-            ContentTitle = "Search results";
+            ContentTitle = "搜索结果";
             SearchResults.Clear();
             var songs = await _navidromeClient.SearchSongsAsync(SearchQuery);
             ReplaceSongs(songs);
             StatusMessage = songs.Count == 0
-                ? "No songs found."
-                : $"Found {songs.Count} songs.";
+                ? "没有找到歌曲。"
+                : $"找到 {songs.Count} 首歌曲。";
         });
     }
 
@@ -522,7 +536,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         await RunBusyAsync(async () =>
         {
             CurrentView = LibraryViewKind.Albums;
-            ContentTitle = "Newest albums";
+            ContentTitle = "最新专辑";
             Albums.Clear();
             var albums = await _navidromeClient.GetNewestAlbumsAsync();
             foreach (var album in albums)
@@ -532,8 +546,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
             SelectedAlbum = Albums.FirstOrDefault();
             StatusMessage = albums.Count == 0
-                ? "No albums found."
-                : $"Loaded {albums.Count} albums.";
+                ? "没有找到专辑。"
+                : $"已加载 {albums.Count} 张专辑。";
         });
     }
 
@@ -542,7 +556,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
         if (SelectedAlbum is null)
         {
-            StatusMessage = "Select an album first.";
+            StatusMessage = "请先选择一张专辑。";
             return;
         }
 
@@ -559,8 +573,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             var songs = await _navidromeClient.GetAlbumSongsAsync(album.Id);
             ReplaceSongs(songs);
             StatusMessage = songs.Count == 0
-                ? "Album has no songs."
-                : $"Loaded {songs.Count} songs from {album.Name}.";
+                ? "这张专辑没有歌曲。"
+                : $"已加载 {album.Name} 的 {songs.Count} 首歌曲。";
         });
     }
 
@@ -575,7 +589,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         await RunBusyAsync(async () =>
         {
             CurrentView = LibraryViewKind.Playlists;
-            ContentTitle = "Playlists";
+            ContentTitle = "播放列表";
             Playlists.Clear();
             var playlists = await _navidromeClient.GetPlaylistsAsync();
             foreach (var playlist in playlists)
@@ -585,8 +599,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
             SelectedPlaylist = Playlists.FirstOrDefault();
             StatusMessage = playlists.Count == 0
-                ? "No playlists found."
-                : $"Loaded {playlists.Count} playlists.";
+                ? "没有找到播放列表。"
+                : $"已加载 {playlists.Count} 个播放列表。";
         });
     }
 
@@ -595,7 +609,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
         if (SelectedPlaylist is null)
         {
-            StatusMessage = "Select a playlist first.";
+            StatusMessage = "请先选择一个播放列表。";
             return;
         }
 
@@ -612,8 +626,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             var songs = await _navidromeClient.GetPlaylistSongsAsync(playlist.Id);
             ReplaceSongs(songs);
             StatusMessage = songs.Count == 0
-                ? "Playlist has no songs."
-                : $"Loaded {songs.Count} songs from {playlist.Name}.";
+                ? "这个播放列表没有歌曲。"
+                : $"已加载 {playlist.Name} 的 {songs.Count} 首歌曲。";
         });
     }
 
@@ -622,7 +636,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
         if (SelectedSong is null)
         {
-            StatusMessage = "Select a song first.";
+            StatusMessage = "请先选择一首歌曲。";
             return;
         }
 
@@ -639,7 +653,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
         if (PlaybackQueue.Count == 0)
         {
-            StatusMessage = "Playback queue is empty.";
+            StatusMessage = "播放队列为空。";
             return;
         }
 
@@ -655,7 +669,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
         if (PlaybackQueue.Count == 0)
         {
-            StatusMessage = "Playback queue is empty.";
+            StatusMessage = "播放队列为空。";
             return;
         }
 
@@ -671,7 +685,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
         if (SelectedSong is null || !PlaybackQueue.Contains(SelectedSong))
         {
-            StatusMessage = "Select a queued song first.";
+            StatusMessage = "请先选择队列中的歌曲。";
             return;
         }
 
@@ -696,8 +710,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         }
 
         StatusMessage = wasCurrentSong
-            ? "Removed current song from queue. Playback will continue until stopped or changed."
-            : "Removed song from queue.";
+            ? "已从队列移除当前歌曲，播放会持续到停止或切歌。"
+            : "已从队列移除歌曲。";
     }
 
     [RelayCommand]
@@ -706,7 +720,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         PlaybackQueue.Clear();
         _currentQueueIndex = -1;
         SelectedSong = SearchResults.FirstOrDefault();
-        StatusMessage = "Playback queue cleared.";
+        StatusMessage = "已清空播放队列。";
     }
 
     [RelayCommand]
@@ -714,7 +728,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
         _playerService.Pause();
         IsPlaying = _playerService.IsPlaying;
-        StatusMessage = IsPlaying ? "Playback resumed." : "Playback paused.";
+        StatusMessage = IsPlaying ? "已继续播放。" : "已暂停播放。";
     }
 
     [RelayCommand]
@@ -727,7 +741,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         CanSeek = false;
         PlaybackPositionText = "0:00";
         PlaybackDurationText = "0:00";
-        StatusMessage = "Playback stopped.";
+        StatusMessage = "已停止播放。";
     }
 
     public string? GetCoverArtUrl(Song song)
@@ -751,7 +765,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             string.IsNullOrWhiteSpace(Username) ||
             string.IsNullOrWhiteSpace(Password))
         {
-            StatusMessage = "Server URL, username, and password are required.";
+            StatusMessage = "请填写服务器地址、用户名和密码。";
             return false;
         }
 
@@ -763,7 +777,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
         if (_activeConnection is null)
         {
-            StatusMessage = "Add or activate a Navidrome server in Settings first.";
+            StatusMessage = "请先在设置中添加并启用 Navidrome 服务器。";
             return false;
         }
 
@@ -796,6 +810,11 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
         OnPropertyChanged(nameof(CurrentSongSubtitle));
         OnPropertyChanged(nameof(CurrentSongLyrics));
+    }
+
+    partial void OnIsPlayingChanged(bool value)
+    {
+        OnPropertyChanged(nameof(PlaybackToggleToolTip));
     }
 
     partial void OnRecentSidebarSelectedChanged(bool value)
@@ -879,12 +898,12 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             CanSeek = PlaybackDuration > 0;
             PlaybackPositionText = "0:00";
             PlaybackDurationText = FormatDuration(TimeSpan.FromSeconds(PlaybackDuration));
-            StatusMessage = $"Playing {song.Title}.";
+            StatusMessage = $"正在播放 {song.Title}。";
         }
         catch (Exception ex)
         {
             IsPlaying = false;
-            StatusMessage = $"Could not start playback: {ex.Message}";
+            StatusMessage = $"播放失败：{ex.Message}";
             return;
         }
 
@@ -894,7 +913,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Playing {song.Title}. Scrobble failed: {ex.Message}";
+            StatusMessage = $"正在播放 {song.Title}。同步播放记录失败：{ex.Message}";
         }
     }
 
@@ -949,20 +968,21 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             if (connection is null)
             {
                 NewServer();
-                OpenSettings();
-                StatusMessage = "Add a Navidrome server in Settings to start browsing.";
+                CurrentView = LibraryViewKind.Home;
+                ContentTitle = "首页";
+                StatusMessage = "请在左侧设置中添加并启用 Navidrome 服务器。";
                 return;
             }
 
             ApplyConnection(connection, SavedServers.FirstOrDefault(server => server.Id == settings.ActiveServerId));
             await LoadHomeContentAsync();
             CurrentView = LibraryViewKind.Home;
-            ContentTitle = "Home";
-            StatusMessage = "Loaded saved Navidrome connection.";
+            ContentTitle = "首页";
+            StatusMessage = "已加载保存的 Navidrome 连接。";
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Could not load saved settings: {ex.Message}";
+            StatusMessage = $"加载设置失败：{ex.Message}";
         }
     }
 
@@ -1004,6 +1024,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         SetActiveConnection(CreateConnection());
         OnPropertyChanged(nameof(IsEditingSavedServer));
         OnPropertyChanged(nameof(ConnectionFormTitle));
+        OnPropertyChanged(nameof(ConnectionFormHint));
         OnPropertyChanged(nameof(SaveServerButtonText));
     }
 
@@ -1033,6 +1054,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         SetActiveConnection(connection);
         OnPropertyChanged(nameof(IsEditingSavedServer));
         OnPropertyChanged(nameof(ConnectionFormTitle));
+        OnPropertyChanged(nameof(ConnectionFormHint));
         OnPropertyChanged(nameof(SaveServerButtonText));
         _navidromeClient.Configure(connection);
     }
@@ -1059,12 +1081,13 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         _editingServerId = profile.Id;
         OnPropertyChanged(nameof(IsEditingSavedServer));
         OnPropertyChanged(nameof(ConnectionFormTitle));
+        OnPropertyChanged(nameof(ConnectionFormHint));
         OnPropertyChanged(nameof(SaveServerButtonText));
     }
 
     private void SetActiveServerSummary(string name, string url)
     {
-        ActiveServerName = string.IsNullOrWhiteSpace(name) ? "No server selected" : name;
+        ActiveServerName = string.IsNullOrWhiteSpace(name) ? "未选择服务器" : name;
         ActiveServerUrl = url;
     }
 

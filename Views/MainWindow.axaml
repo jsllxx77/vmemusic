@@ -30,7 +30,7 @@
 
     <Grid RowDefinitions="Auto,*,Auto" Background="#0F1118">
         <Border Grid.Row="0" Margin="20,14,20,12" Padding="18,14" Background="#14FFFFFF" CornerRadius="18">
-            <Grid ColumnDefinitions="280,*,Auto,Auto" ColumnSpacing="14">
+            <Grid ColumnDefinitions="280,*,Auto" ColumnSpacing="14">
                 <StackPanel Grid.Column="0" Spacing="2">
                     <TextBlock Text="{Binding ActiveServerName}"
                                FontSize="17"
@@ -46,19 +46,15 @@
                 <Border Grid.Column="1" Background="#1AFFFFFF" CornerRadius="16" Padding="14,8">
                     <TextBox Background="Transparent"
                              BorderThickness="0"
-                             PlaceholderText="Search songs"
+                             PlaceholderText="搜索歌曲"
                              Text="{Binding SearchQuery}"
                              IsEnabled="{Binding HasActiveServer}" />
                 </Border>
 
                 <Button Grid.Column="2"
-                        Content="Search"
+                        Content="搜索"
                         Command="{Binding SearchCommand}"
                         IsEnabled="{Binding HasActiveServer}" />
-
-                <Button Grid.Column="3"
-                        Content="Settings"
-                        Command="{Binding OpenSettingsCommand}" />
             </Grid>
         </Border>
 
@@ -70,25 +66,25 @@
                                    FontSize="30"
                                    FontWeight="Bold"
                                    Foreground="#FFF7F8FB" />
-                        <TextBlock Text="Navidrome desktop player"
+                        <TextBlock Text="Navidrome 桌面播放器"
                                    Foreground="#B8C2D2"
                                    FontSize="12" />
                     </StackPanel>
 
                     <StackPanel Grid.Row="1" Margin="0,26,0,0" Spacing="8">
-                        <Button Content="Home"
+                        <Button Content="首页"
                                 Command="{Binding OpenHomeCommand}"
                                 IsEnabled="{Binding HasActiveServer}" />
-                        <Button Content="Search"
+                        <Button Content="搜索"
                                 Command="{Binding SearchCommand}"
                                 IsEnabled="{Binding HasActiveServer}" />
-                        <Button Content="Albums"
+                        <Button Content="专辑"
                                 Command="{Binding LoadNewestAlbumsCommand}"
                                 IsEnabled="{Binding HasActiveServer}" />
-                        <Button Content="Artists"
+                        <Button Content="艺术家"
                                 Command="{Binding LoadArtistsCommand}"
                                 IsEnabled="{Binding HasActiveServer}" />
-                        <Button Content="Playlists"
+                        <Button Content="播放列表"
                                 Command="{Binding LoadPlaylistsCommand}"
                                 IsEnabled="{Binding HasActiveServer}" />
                     </StackPanel>
@@ -100,20 +96,20 @@
                             CornerRadius="18"
                             IsVisible="{Binding HasActiveServer}">
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Quick Access"
+                            <TextBlock Text="快捷入口"
                                        Foreground="#FFF7F8FB"
                                        FontWeight="SemiBold" />
-                            <Button Content="Now Playing"
+                            <Button Content="正在播放"
                                     Command="{Binding OpenNowPlayingDetailsCommand}" />
-                            <Button Content="Recent Sidebar"
+                            <Button Content="最近播放"
                                     Command="{Binding ShowRecentSidebarCommand}" />
-                            <Button Content="Queue Sidebar"
+                            <Button Content="播放队列"
                                     Command="{Binding ShowQueueSidebarCommand}" />
                         </StackPanel>
                     </Border>
 
                     <Button Grid.Row="3"
-                            Content="Settings"
+                            Content="设置"
                             HorizontalAlignment="Stretch"
                             Command="{Binding OpenSettingsCommand}" />
                 </Grid>
@@ -140,21 +136,21 @@
                                 <Border Background="#16FFFFFF" CornerRadius="22" Padding="22">
                                     <Grid ColumnDefinitions="2*,*" ColumnSpacing="20">
                                         <StackPanel Spacing="10">
-                                            <TextBlock Text="Discover your library"
+                                            <TextBlock Text="发现你的音乐库"
                                                        FontSize="34"
                                                        FontWeight="Bold"
                                                        Foreground="#FFF8F9FB" />
-                                            <TextBlock Text="Use Home for quick access to recent albums and playlists, then jump into search or playback."
+                                            <TextBlock Text="从首页快速进入最新专辑和播放列表，也可以直接搜索歌曲开始播放。"
                                                        Foreground="#C6CFDB"
                                                        FontSize="14"
                                                        TextWrapping="Wrap" />
                                         </StackPanel>
                                         <Border Grid.Column="1" Background="#22FF4D67" CornerRadius="20" Padding="18">
                                             <StackPanel Spacing="8" VerticalAlignment="Center">
-                                                <TextBlock Text="Playlist"
+                                                <TextBlock Text="播放列表"
                                                            Foreground="#FFF8F9FB"
                                                            FontWeight="SemiBold" />
-                                                <TextBlock Text="Bottom player opens song details. Right sidebar switches between queue and recent plays."
+                                                <TextBlock Text="点击底栏歌曲可打开详情页，右侧可切换播放队列和最近播放。"
                                                            Foreground="#FFE5EAF0"
                                                            TextWrapping="Wrap" />
                                             </StackPanel>
@@ -163,7 +159,7 @@
                                 </Border>
 
                                 <StackPanel Spacing="12">
-                                    <TextBlock Text="Newest Albums"
+                                    <TextBlock Text="最新专辑"
                                                FontSize="20"
                                                FontWeight="SemiBold"
                                                Foreground="#FFF7F8FB" />
@@ -203,7 +199,7 @@
                                 </StackPanel>
 
                                 <StackPanel Spacing="12">
-                                    <TextBlock Text="Playlists"
+                                    <TextBlock Text="播放列表"
                                                FontSize="20"
                                                FontWeight="SemiBold"
                                                Foreground="#FFF7F8FB" />
@@ -232,7 +228,7 @@
                                                                        Foreground="#FFF7F8FB"
                                                                        FontWeight="SemiBold"
                                                                        TextWrapping="Wrap" />
-                                                            <TextBlock Text="{Binding SongCount, StringFormat='{}{0} songs'}"
+                                                            <TextBlock Text="{Binding SongCount, StringFormat='{}{0} 首歌曲'}"
                                                                        Foreground="#AEBACE"
                                                                        FontSize="12" />
                                                             <TextBlock Text="{Binding DurationText}"
@@ -355,7 +351,7 @@
                                                            Foreground="#FFF7F8FB"
                                                            FontWeight="SemiBold"
                                                            TextTrimming="CharacterEllipsis" />
-                                                <TextBlock Text="Artist"
+                                                <TextBlock Text="艺术家"
                                                            Foreground="#AEBACE"
                                                            FontSize="12" />
                                             </StackPanel>
@@ -389,12 +385,12 @@
                                                            Foreground="#FFF7F8FB"
                                                            FontWeight="SemiBold"
                                                            TextTrimming="CharacterEllipsis" />
-                                                <TextBlock Text="Playlist"
+                                                <TextBlock Text="播放列表"
                                                            Foreground="#AEBACE"
                                                            FontSize="12" />
                                             </StackPanel>
                                             <TextBlock Grid.Column="2"
-                                                       Text="{Binding SongCount, StringFormat='{}{0} songs'}"
+                                                       Text="{Binding SongCount, StringFormat='{}{0} 首歌曲'}"
                                                        Foreground="#AEBACE"
                                                        VerticalAlignment="Center" />
                                             <TextBlock Grid.Column="3"
@@ -416,7 +412,7 @@
                                                Stretch="UniformToFill" />
                                     </Border>
                                     <StackPanel Spacing="6">
-                                        <TextBlock Text="{Binding CurrentSong.Title, FallbackValue=Nothing playing}"
+                                        <TextBlock Text="{Binding CurrentSong.Title, FallbackValue=未播放}"
                                                    Foreground="#FFF7F8FB"
                                                    FontSize="24"
                                                    FontWeight="Bold"
@@ -442,30 +438,38 @@
                             <StackPanel Spacing="18">
                                 <Border Background="#16FFFFFF" CornerRadius="22" Padding="18">
                                     <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="14">
-                                        <TextBlock Text="{Binding ConnectionFormTitle}"
-                                                   Foreground="#FFF7F8FB"
-                                                   FontWeight="Bold"
-                                                   FontSize="20" />
+                                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16">
+                                            <TextBlock Text="{Binding ConnectionFormTitle}"
+                                                       Foreground="#FFF7F8FB"
+                                                       FontWeight="Bold"
+                                                       FontSize="20" />
+                                            <TextBlock Grid.Column="1"
+                                                       HorizontalAlignment="Right"
+                                                       Text="{Binding ConnectionFormHint}"
+                                                       Foreground="#AEBACE"
+                                                       FontSize="12"
+                                                       TextWrapping="Wrap" />
+                                        </Grid>
                                         <Grid Grid.Row="1"
                                               ColumnDefinitions="180,*,160,160"
                                               ColumnSpacing="12"
                                               RowDefinitions="Auto,Auto">
-                                            <TextBox Grid.Column="0" Grid.Row="0" PlaceholderText="Profile name" Text="{Binding ServerProfileName}" />
-                                            <TextBox Grid.Column="1" Grid.Row="0" PlaceholderText="Server URL" Text="{Binding ServerUrl}" />
-                                            <TextBox Grid.Column="2" Grid.Row="0" PlaceholderText="Username" Text="{Binding Username}" />
-                                            <TextBox Grid.Column="3" Grid.Row="0" PlaceholderText="Password" PasswordChar="*" Text="{Binding Password}" />
+                                            <TextBox Grid.Column="0" Grid.Row="0" PlaceholderText="配置名称" Text="{Binding ServerProfileName}" />
+                                            <TextBox Grid.Column="1" Grid.Row="0" PlaceholderText="服务器地址" Text="{Binding ServerUrl}" />
+                                            <TextBox Grid.Column="2" Grid.Row="0" PlaceholderText="用户名" Text="{Binding Username}" />
+                                            <TextBox Grid.Column="3" Grid.Row="0" PlaceholderText="密码" PasswordChar="*" Text="{Binding Password}" />
                                             <TextBlock Grid.Row="1" Grid.ColumnSpan="4"
-                                                       Text="Use Test Connection before Save if you want to verify the server first."
+                                                       Text="需要先验证服务器时，可以点击“测试连接”；确认无误后点击“保存并启用”。"
                                                        Foreground="#AEBACE"
                                                        FontSize="12" />
                                         </Grid>
                                         <WrapPanel Grid.Row="2" Orientation="Horizontal">
-                                            <Button Content="New" Command="{Binding NewServerCommand}" Margin="0,0,8,8" />
-                                            <Button Content="Edit" Command="{Binding EditSelectedServerCommand}" IsEnabled="{Binding HasSelectedSavedServer}" Margin="0,0,8,8" />
-                                            <Button Content="Cancel" Command="{Binding CancelServerEditCommand}" Margin="0,0,8,8" />
+                                            <Button Content="新建空白配置" Command="{Binding NewServerCommand}" Margin="0,0,8,8" />
+                                            <Button Content="编辑选中" Command="{Binding EditSelectedServerCommand}" IsEnabled="{Binding HasSelectedSavedServer}" Margin="0,0,8,8" />
+                                            <Button Content="取消编辑" Command="{Binding CancelServerEditCommand}" Margin="0,0,8,8" />
                                             <Button Content="{Binding SaveServerButtonText}" Command="{Binding SaveCurrentServerCommand}" Margin="0,0,8,8" />
-                                            <Button Content="Test Connection" Command="{Binding TestConnectionCommand}" Margin="0,0,8,8" />
-                                            <Button Content="Clear All Saved Data" Command="{Binding ClearSavedConnectionCommand}" Margin="0,0,8,8" />
+                                            <Button Content="测试连接" Command="{Binding TestConnectionCommand}" Margin="0,0,8,8" />
+                                            <Button Content="清空保存数据" Command="{Binding ClearSavedConnectionCommand}" Margin="0,0,8,8" />
                                         </WrapPanel>
                                     </Grid>
                                 </Border>
@@ -473,7 +477,7 @@
                                 <Border Background="#16FFFFFF" CornerRadius="22" Padding="18">
                                     <Grid ColumnDefinitions="*,Auto">
                                         <StackPanel Spacing="6">
-                                            <TextBlock Text="Cover Art Cache"
+                                            <TextBlock Text="封面缓存"
                                                        Foreground="#FFF7F8FB"
                                                        FontWeight="Bold"
                                                        FontSize="18" />
@@ -482,7 +486,7 @@
                                                        TextWrapping="Wrap" />
                                         </StackPanel>
                                         <Button Grid.Column="1"
-                                                Content="Clear Cache"
+                                                Content="清理缓存"
                                                 Command="{Binding ClearCoverArtCacheCommand}"
                                                 VerticalAlignment="Top" />
                                     </Grid>
@@ -490,7 +494,7 @@
 
                                 <Border Background="#16FFFFFF" CornerRadius="22" Padding="18">
                                     <Grid RowDefinitions="Auto,*" RowSpacing="12">
-                                        <TextBlock Text="Saved Servers"
+                                        <TextBlock Text="已保存服务器"
                                                    Foreground="#FFF7F8FB"
                                                    FontWeight="Bold"
                                                    FontSize="18" />
@@ -516,12 +520,12 @@
                                                 </ListBox.ItemTemplate>
                                             </ListBox>
                                             <Button Grid.Column="1"
-                                                    Content="Use"
+                                                    Content="启用"
                                                     Command="{Binding UseSelectedServerCommand}"
                                                     IsEnabled="{Binding HasSelectedSavedServer}"
                                                     VerticalAlignment="Top" />
                                             <Button Grid.Column="2"
-                                                    Content="Remove"
+                                                    Content="删除"
                                                     Command="{Binding RemoveSelectedServerCommand}"
                                                     IsEnabled="{Binding HasSelectedSavedServer}"
                                                     VerticalAlignment="Top" />
@@ -543,23 +547,23 @@
                                    FontWeight="Bold"
                                    VerticalAlignment="Center" />
                         <Button Grid.Column="1"
-                                Content="Queue"
+                                Content="队列"
                                 Command="{Binding ShowQueueSidebarCommand}" />
                         <Button Grid.Column="2"
-                                Content="Recent"
+                                Content="最近"
                                 Command="{Binding ShowRecentSidebarCommand}" />
                     </Grid>
 
                     <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" IsVisible="{Binding IsQueueSidebar}">
-                        <TextBlock Text="Manage your play queue"
+                        <TextBlock Text="管理当前播放队列"
                                    Foreground="#AEBACE"
                                    FontSize="12"
                                    VerticalAlignment="Center" />
                         <Button Grid.Column="1"
-                                Content="Remove"
+                                Content="移除"
                                 Command="{Binding RemoveSelectedFromQueueCommand}" />
                         <Button Grid.Column="2"
-                                Content="Clear"
+                                Content="清空"
                                 Command="{Binding ClearQueueCommand}" />
                     </Grid>
 
@@ -641,7 +645,7 @@
                                    Stretch="UniformToFill" />
                         </Border>
                         <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
-                            <TextBlock Text="{Binding CurrentSong.Title, FallbackValue=Nothing playing}"
+                            <TextBlock Text="{Binding CurrentSong.Title, FallbackValue=未播放}"
                                        Foreground="#FFF7F8FB"
                                        FontWeight="SemiBold"
                                        TextTrimming="CharacterEllipsis" />
@@ -671,16 +675,66 @@
                     </Grid>
 
                     <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto" HorizontalAlignment="Center" ColumnSpacing="12">
-                        <Button Grid.Column="0" Content="Prev" Command="{Binding PlayPreviousCommand}" />
-                        <Button Grid.Column="1" Content="Play" Command="{Binding PlaySelectedCommand}" />
-                        <Button Grid.Column="2" Content="Pause" Command="{Binding TogglePlaybackCommand}" />
-                        <Button Grid.Column="3" Content="Stop" Command="{Binding StopCommand}" />
-                        <Button Grid.Column="4" Content="Next" Command="{Binding PlayNextCommand}" />
+                        <Button Grid.Column="0"
+                                Width="42"
+                                Height="36"
+                                Command="{Binding PlayPreviousCommand}"
+                                ToolTip.Tip="上一首">
+                            <Path Width="18"
+                                  Height="18"
+                                  Data="M 4 4 L 7 4 L 7 20 L 4 20 Z M 19 5 L 9 12 L 19 19 Z"
+                                  Fill="#FFF7F8FB"
+                                  Stretch="Uniform" />
+                        </Button>
+                        <Button Grid.Column="1"
+                                Width="46"
+                                Height="40"
+                                Command="{Binding PlaySelectedCommand}"
+                                ToolTip.Tip="播放选中歌曲">
+                            <Path Width="18"
+                                  Height="18"
+                                  Data="M 6 4 L 20 12 L 6 20 Z"
+                                  Fill="#FFF7F8FB"
+                                  Stretch="Uniform" />
+                        </Button>
+                        <Button Grid.Column="2"
+                                Width="42"
+                                Height="36"
+                                Command="{Binding TogglePlaybackCommand}"
+                                ToolTip.Tip="{Binding PlaybackToggleToolTip}">
+                            <Path Width="18"
+                                  Height="18"
+                                  Data="M 6 4 L 10 4 L 10 20 L 6 20 Z M 14 4 L 18 4 L 18 20 L 14 20 Z"
+                                  Fill="#FFF7F8FB"
+                                  Stretch="Uniform" />
+                        </Button>
+                        <Button Grid.Column="3"
+                                Width="42"
+                                Height="36"
+                                Command="{Binding StopCommand}"
+                                ToolTip.Tip="停止">
+                            <Path Width="16"
+                                  Height="16"
+                                  Data="M 5 5 L 19 5 L 19 19 L 5 19 Z"
+                                  Fill="#FFF7F8FB"
+                                  Stretch="Uniform" />
+                        </Button>
+                        <Button Grid.Column="4"
+                                Width="42"
+                                Height="36"
+                                Command="{Binding PlayNextCommand}"
+                                ToolTip.Tip="下一首">
+                            <Path Width="18"
+                                  Height="18"
+                                  Data="M 5 5 L 15 12 L 5 19 Z M 17 4 L 20 4 L 20 20 L 17 20 Z"
+                                  Fill="#FFF7F8FB"
+                                  Stretch="Uniform" />
+                        </Button>
                     </Grid>
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" Spacing="8" VerticalAlignment="Center">
-                    <TextBlock Text="Volume"
+                    <TextBlock Text="音量"
                                Foreground="#AEBACE"
                                FontSize="12" />
                     <Slider Minimum="0"
