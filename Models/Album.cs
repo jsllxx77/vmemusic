@@ -1,10 +1,10 @@
 namespace VmeMusic.Models;
 
-public sealed record Song(
+public sealed record Album(
     string Id,
-    string Title,
+    string Name,
     string Artist,
-    string Album,
     string? CoverArt,
     string? CoverArtUrl,
-    int? DurationSeconds);
+    int? SongCount,
+    int? Year);

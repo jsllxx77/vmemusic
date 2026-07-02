@@ -19,4 +19,22 @@ public partial class MainWindow : Window
             viewModel.PlaySelectedCommand.Execute(null);
         }
     }
+
+    private void AlbumsList_OnDoubleTapped(object? sender, TappedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel &&
+            viewModel.LoadSelectedAlbumCommand.CanExecute(null))
+        {
+            viewModel.LoadSelectedAlbumCommand.Execute(null);
+        }
+    }
+
+    private void PlaylistsList_OnDoubleTapped(object? sender, TappedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel &&
+            viewModel.LoadSelectedPlaylistCommand.CanExecute(null))
+        {
+            viewModel.LoadSelectedPlaylistCommand.Execute(null);
+        }
+    }
 }

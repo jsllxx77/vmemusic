@@ -32,7 +32,19 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private Song? selectedSong;
 
     [ObservableProperty]
+    private Album? selectedAlbum;
+
+    [ObservableProperty]
+    private Playlist? selectedPlaylist;
+
+    [ObservableProperty]
     private Song? currentSong;
+
+    [ObservableProperty]
+    private LibraryViewKind currentView = LibraryViewKind.Songs;
+
+    [ObservableProperty]
+    private string contentTitle = "Songs";
 
     [ObservableProperty]
     private string statusMessage = "Configure your Navidrome server to start.";
@@ -83,7 +95,17 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
     public ObservableCollection<Song> SearchResults { get; } = [];
 
+    public ObservableCollection<Album> Albums { get; } = [];
+
+    public ObservableCollection<Playlist> Playlists { get; } = [];
+
     public ObservableCollection<Song> PlaybackQueue { get; } = [];
+
+    public bool IsSongsView => CurrentView == LibraryViewKind.Songs;
+
+    public bool IsAlbumsView => CurrentView == LibraryViewKind.Albums;
+
+    public bool IsPlaylistsView => CurrentView == LibraryViewKind.Playlists;
 
     [RelayCommand]
     private async Task TestConnectionAsync()
@@ -111,8 +133,15 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         Password = "";
         IsConnected = false;
         SearchResults.Clear();
+        Albums.Clear();
+        Playlists.Clear();
+        PlaybackQueue.Clear();
         CurrentSong = null;
         SelectedSong = null;
+        SelectedAlbum = null;
+        SelectedPlaylist = null;
+        CurrentView = LibraryViewKind.Songs;
+        ContentTitle = "Songs";
         StatusMessage = "Saved connection cleared.";
     }
 
@@ -126,24 +155,120 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
         await RunBusyAsync(async () =>
         {
+            CurrentView = LibraryViewKind.Songs;
+            ContentTitle = "Search results";
             SearchResults.Clear();
             var songs = await _navidromeClient.SearchSongsAsync(SearchQuery);
-            foreach (var song in songs)
-            {
-                SearchResults.Add(song);
-            }
-
-            PlaybackQueue.Clear();
-            foreach (var song in songs)
-            {
-                PlaybackQueue.Add(song);
-            }
-
-            _currentQueueIndex = PlaybackQueue.Count > 0 ? 0 : -1;
-            SelectedSong = PlaybackQueue.FirstOrDefault();
+            ReplaceSongs(songs);
             StatusMessage = songs.Count == 0
                 ? "No songs found."
                 : $"Found {songs.Count} songs.";
+        });
+    }
+
+    [RelayCommand]
+    private async Task LoadNewestAlbumsAsync()
+    {
+        if (!ConfigureClient())
+        {
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            CurrentView = LibraryViewKind.Albums;
+            ContentTitle = "Newest albums";
+            Albums.Clear();
+            var albums = await _navidromeClient.GetNewestAlbumsAsync();
+            foreach (var album in albums)
+            {
+                Albums.Add(album);
+            }
+
+            SelectedAlbum = Albums.FirstOrDefault();
+            StatusMessage = albums.Count == 0
+                ? "No albums found."
+                : $"Loaded {albums.Count} albums.";
+        });
+    }
+
+    [RelayCommand]
+    private async Task LoadSelectedAlbumAsync()
+    {
+        if (SelectedAlbum is null)
+        {
+            StatusMessage = "Select an album first.";
+            return;
+        }
+
+        if (!ConfigureClient())
+        {
+            return;
+        }
+
+        var album = SelectedAlbum;
+        await RunBusyAsync(async () =>
+        {
+            CurrentView = LibraryViewKind.Songs;
+            ContentTitle = album.Name;
+            var songs = await _navidromeClient.GetAlbumSongsAsync(album.Id);
+            ReplaceSongs(songs);
+            StatusMessage = songs.Count == 0
+                ? "Album has no songs."
+                : $"Loaded {songs.Count} songs from {album.Name}.";
+        });
+    }
+
+    [RelayCommand]
+    private async Task LoadPlaylistsAsync()
+    {
+        if (!ConfigureClient())
+        {
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            CurrentView = LibraryViewKind.Playlists;
+            ContentTitle = "Playlists";
+            Playlists.Clear();
+            var playlists = await _navidromeClient.GetPlaylistsAsync();
+            foreach (var playlist in playlists)
+            {
+                Playlists.Add(playlist);
+            }
+
+            SelectedPlaylist = Playlists.FirstOrDefault();
+            StatusMessage = playlists.Count == 0
+                ? "No playlists found."
+                : $"Loaded {playlists.Count} playlists.";
+        });
+    }
+
+    [RelayCommand]
+    private async Task LoadSelectedPlaylistAsync()
+    {
+        if (SelectedPlaylist is null)
+        {
+            StatusMessage = "Select a playlist first.";
+            return;
+        }
+
+        if (!ConfigureClient())
+        {
+            return;
+        }
+
+        var playlist = SelectedPlaylist;
+        await RunBusyAsync(async () =>
+        {
+            CurrentView = LibraryViewKind.Songs;
+            ContentTitle = playlist.Name;
+            var songs = await _navidromeClient.GetPlaylistSongsAsync(playlist.Id);
+            ReplaceSongs(songs);
+            StatusMessage = songs.Count == 0
+                ? "Playlist has no songs."
+                : $"Loaded {songs.Count} songs from {playlist.Name}.";
         });
     }
 
@@ -221,6 +346,16 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         return _navidromeClient.GetCoverArtUrl(song.CoverArt);
     }
 
+    public string? GetAlbumCoverArtUrl(Album album)
+    {
+        return _navidromeClient.GetCoverArtUrl(album.CoverArt);
+    }
+
+    public string? GetPlaylistCoverArtUrl(Playlist playlist)
+    {
+        return _navidromeClient.GetCoverArtUrl(playlist.CoverArt);
+    }
+
     private bool ConfigureClient()
     {
         if (string.IsNullOrWhiteSpace(ServerUrl) ||
@@ -238,6 +373,31 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private NavidromeConnection CreateConnection()
     {
         return new NavidromeConnection(ServerUrl, Username, Password);
+    }
+
+    partial void OnCurrentViewChanged(LibraryViewKind value)
+    {
+        OnPropertyChanged(nameof(IsSongsView));
+        OnPropertyChanged(nameof(IsAlbumsView));
+        OnPropertyChanged(nameof(IsPlaylistsView));
+    }
+
+    private void ReplaceSongs(IReadOnlyList<Song> songs)
+    {
+        SearchResults.Clear();
+        foreach (var song in songs)
+        {
+            SearchResults.Add(song);
+        }
+
+        PlaybackQueue.Clear();
+        foreach (var song in songs)
+        {
+            PlaybackQueue.Add(song);
+        }
+
+        _currentQueueIndex = PlaybackQueue.Count > 0 ? 0 : -1;
+        SelectedSong = PlaybackQueue.FirstOrDefault();
     }
 
     partial void OnVolumeChanged(int value)
